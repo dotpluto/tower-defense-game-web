@@ -1,14 +1,12 @@
-# Particles
-Particles is a 2D tower defense game. Your goal is it to defend a newly established colony from the agressive locals.
-Decide on the right stratergy to kill them all.
+# About Particles
+This game is about dropping on unexplored planets and trying to extract as much resources as possible as fast as possible while under ever increasing threat from the local fauna. Think extraction shooter mixed with rts.
+
 ## TODO
 - introduce meta-progression
   - explore different planets
     - planets with different levels of energy
     - planets good for one of the following: constant solar (expensive price, unlimited), varying solar (batteries), limited geothermal (low price, limited)
     - local resources and global resources
-
-  
 - implement planet selection screen using a singleton?
 - tower type ideas:
   - money farm (invest for later profit)
