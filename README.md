@@ -1,5 +1,5 @@
 # About Particles
-This game is about dropping on unexplored planets and trying to extract as much resources as possible as fast as possible while under ever increasing threat from the local fauna. Think extraction shooter mixed with rts.
+In this game you are dropped on uncharted planets and are tasked with building a base that extracts as much resources as possible as quickly as possible. But don't get too greedy or the ever increasing amount of locals will get to you before you can evacuate with your loot.
 
 ## TODO
 - introduce meta-progression
