@@ -21,7 +21,7 @@ fi
 
 #clean webroot
 cleanup_list=${DEV_WEBROOT}*
-if [ -n $cleanup_list ]; then
+if [ -n ${cleanup_list:+"notempty"} ]; then
 	rm -rv $cleanup_list
 fi
 
