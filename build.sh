@@ -22,7 +22,7 @@ fi
 #clean webroot
 cleanup_list=${DEV_WEBROOT}*
 if [ -n ${cleanup_list:+"notempty"} ]; then
-	rm -rv $cleanup_list
+	rm -r $cleanup_list
 fi
 
 #individual files

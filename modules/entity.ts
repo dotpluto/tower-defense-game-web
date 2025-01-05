@@ -8,7 +8,7 @@ import { Game } from "modules/game.js";
 import { Level } from "modules/level.js";
 import { fastDelete } from "modules/util.js";
 
-interface TypeArgs {
+interface EntityTypeArgs {
     size: Vec2;
     doCollision: boolean;
     hasHealth: boolean;
@@ -21,7 +21,7 @@ export abstract class Type {
     public hasHealth: boolean;
     public maxHealth: number;
 
-    constructor(args: TypeArgs) {
+    constructor(args: EntityTypeArgs) {
         this.size = args.size;
         this.doCollision = args.doCollision;
         this.hasHealth = args.hasHealth;
@@ -79,7 +79,7 @@ export abstract class Entity {
     doCollisionResults(oEntity: Entity) {}
 }
 
-interface BuildingTypeArgs extends TypeArgs {}
+interface BuildingTypeArgs extends EntityTypeArgs {}
 
 export class BuildingType extends Type {
     static HQ_TEX = loadTexture("hq.png");
@@ -129,7 +129,7 @@ export class Building extends Entity {
     }
 }
 
-interface TowerTypeArgs extends TypeArgs {
+interface TowerTypeArgs extends EntityTypeArgs {
     damage: number;
     cost: number;
     shootCooldownMax: number;
@@ -248,7 +248,7 @@ export class Tower extends Entity {
     }
 }
 
-interface ProjectileTypeArgs extends TypeArgs {}
+interface ProjectileTypeArgs extends EntityTypeArgs {}
 
 export class ProjectileType extends Type {
     static BALL = new ProjectileType({
@@ -323,7 +323,7 @@ export class Projectile extends Entity {
     }
 }
 
-interface EnemyTypeArgs extends TypeArgs {
+interface EnemyTypeArgs extends EntityTypeArgs {
     reward: number;
     isArmored: boolean;
     maxHealth: number;
