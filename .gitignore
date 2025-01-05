@@ -1,1 +1,4 @@
+.env
+
+#was relevant when the server served from inside the project dir structure
 /public
