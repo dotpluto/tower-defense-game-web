@@ -13,6 +13,7 @@ import {
     EntityList,
 } from "modules/entity.js";
 import { Viewport, ctx, canvas } from "modules/graphics.js";
+import { SpawnMan } from "modules/spawnLogic.js";
 
 export class LevelDescriptor {
     constructor(
@@ -36,18 +37,21 @@ export class Level {
     buildings = new EntityList<Building>();
     towers = new EntityList<Tower>();
     cm: CollisionMap;
+	spawnMan: SpawnMan = new SpawnMan();
+
     constructor(public desc: LevelDescriptor) {
         this.cm = new CollisionMap(desc.size.x, desc.size.y);
 
         this.buildings.push(
-            Building.newFromCenter(new Vec2(0, 0), BuildingType.HQ, false, 100),
+			new Building(0, 0, true, BuildingType.HQ, 100)
         );
 
         this.enemies.push(
-            new Enemy(new Vec2(400, 0), EnemyType.SMALL, false),
+            new Enemy(400, 0, true, EnemyType.SMALL, 0),
         );
 
-		this.towers.push(Tower.newFromCenter(new Vec2(200, -50), TowerType.ROCKET, false));
+		this.towers.push(new Tower(200, -50, true, TowerType.MG, 100));
+		this.towers.push(new Tower(200, 100, true, TowerType.MG, 100));
     }
 
     draw() {

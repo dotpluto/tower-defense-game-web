@@ -15,7 +15,9 @@ interface EntityTypeArgs {
     maxHealth: number;
 }
 
-export abstract class Type {
+type hasDied = boolean;
+
+export abstract class EntityType {
     public size: Vec2;
     public doCollision: boolean;
     public hasHealth: boolean;
@@ -29,28 +31,56 @@ export abstract class Type {
     }
 }
 
-export abstract class Entity {
-    sections: Entity[][] = []; //CollisionMap sections
+export abstract class Entity<T extends EntityType> {
+    public markDead = false;
+    public pos: Vec2 = new Vec2(0, 0);
+    public abstract eType: T;
+    public health: number;
+
+    public sections: Entity<any>[][] = []; //collision map sectors of current pass
 
     constructor(
-        public pos: Vec2,
-        public type: Type,
-        public dead: boolean,
-        public health: number,
-    ) {}
+        x: number,
+        y: number,
+        isCenter: boolean,
+        eType: T,
+        health: number,
+    ) {
+        this.setPos(x, y, isCenter, eType.size);
+        this.health = health;
+    }
+
+    injectEntityData(
+        x: number,
+        y: number,
+        isCenter: boolean,
+        eType: T,
+        health: number,
+    ) {
+        this.setPos(x, y, isCenter, eType.size);
+        this.health = health;
+    }
+
+    setPos(x: number, y: number, isCenter: boolean, size: Vec2) {
+        this.pos.x = isCenter ? x - size.x / 2 : x;
+        this.pos.y = isCenter ? y - size.y / 2 : y;
+    }
 
     draw(_: Viewport): void {}
-    update(): void {}
+
+    update(): hasDied {
+        return false;
+    }
 
     get center(): Vec2 {
         return new Vec2(
-            this.pos.x + this.type.size.x / 2,
-            this.pos.y + this.type.size.y / 2,
+            this.pos.x + this.eType.size.x / 2,
+            this.pos.y + this.eType.size.y / 2,
         );
     }
 
     checkForCollisions() {
-        let checkedEntities: Set<Entity> = new Set();
+        let checkedEntities: Set<Entity<any>> = new Set();
         checkedEntities.add(this);
 
         for (const section of this.sections) {
@@ -67,21 +97,22 @@ export abstract class Entity {
         }
     }
 
-    collidesWith(e: Entity) {
+    collidesWith(e: Entity<any>) {
         return Vec2.doVectorSquaresIntersect(
             this.pos,
-            this.type.size,
+            this.eType.size,
             e.pos,
-            e.type.size,
+            e.eType.size,
         );
     }
 
-    doCollisionResults(oEntity: Entity) {}
+    doCollisionResults(_: Entity<any>): void {}
 }
+
 
 interface BuildingTypeArgs extends EntityTypeArgs {}
 
-export class BuildingType extends Type {
+export class BuildingType extends EntityType {
     static HQ_TEX = loadTexture("hq.png");
 
     static HQ = new BuildingType({
@@ -108,24 +139,48 @@ export class BuildingType extends Type {
     doCollisionResults() {}
 }
 
-export class Building extends Entity {
-    static newFromCenter(
-        centerPos: Vec2,
-        type: BuildingType,
-        dead: boolean,
+export class Building extends Entity<BuildingType> {
+    static reuseOrCreate(
+        level: Level,
+        x: number,
+        y: number,
+        isCenter: boolean,
+        eType: BuildingType,
         health: number,
-    ): Building {
-        centerPos.x -= type.size.x / 2;
-        centerPos.y -= type.size.y / 2;
-        return new Building(centerPos, type, dead, health);
+    ) {
+        const building = level.buildings.reviveEntityMustHandle();
+        if (building !== undefined) {
+            building.injectData(x, y, true, eType, 100);
+        } else {
+            level.buildings.push(new Building(x, y, isCenter, eType, health));
+        }
     }
 
-    constructor(pos: Vec2, type: BuildingType, dead: boolean, health: number) {
-        super(pos, type, dead, health);
+    public eType: BuildingType;
+
+    constructor(
+        x: number,
+        y: number,
+        isCenter: boolean,
+        eType: BuildingType,
+        health: number,
+    ) {
+        super(x, y, isCenter, eType, health);
+        this.eType = eType;
+    }
+
+    injectData(
+        x: number,
+        y: number,
+        isCenter: boolean,
+        eType: BuildingType,
+        health: number,
+    ) {
+        this.injectEntityData(x, y, isCenter, eType, health);
     }
 
     draw(cam: Viewport) {
-        (this.type as BuildingType).draw(this, cam);
+        this.eType.draw(this, cam);
     }
 }
 
@@ -181,63 +236,113 @@ export class TowerType extends BuildingType {
     }
 }
 
-export class Tower extends Entity {
+export class Tower extends Entity<TowerType> {
+    static reuseOrCreate(
+        level: Level,
+        x: number,
+        y: number,
+        isCenter: boolean,
+        eType: TowerType,
+        health: number,
+    ) {
+        const tower = level.towers.reviveEntityMustHandle();
+        if (tower !== undefined) {
+            tower.injectData(x, y, true, eType, 100);
+        } else {
+            level.buildings.push(new Building(x, y, isCenter, eType, health));
+        }
+    }
+
+    public eType: TowerType;
     public shootCooldown: number = 0;
     public target: Enemy | null = null;
 
-    static newFromCenter(center: Vec2, type: TowerType, dead: boolean): Tower {
-        center.x -= type.size.x / 2;
-        center.y -= type.size.y / 2;
-        return new Tower(center, type, dead);
+    constructor(
+        x: number,
+        y: number,
+        isCenter: boolean,
+        eType: TowerType,
+        health: number,
+    ) {
+        super(x, y, isCenter, eType, health);
+        this.eType = eType;
     }
 
-    constructor(pos: Vec2, type: TowerType, dead: boolean) {
-        super(pos, type, dead, type.maxHealth);
+    injectData(
+        x: number,
+        y: number,
+        isCenter: boolean,
+        eType: TowerType,
+        health: number,
+    ) {
+        this.injectEntityData(x, y, isCenter, eType, health);
     }
 
     draw(view: Viewport) {
         view.fillRect(
             this.pos.x,
             this.pos.y,
-            this.type.size.x,
-            this.type.size.y,
+            this.eType.size.x,
+            this.eType.size.y,
             "blue",
         );
     }
 
-    update() {
+    update(): hasDied {
         if (this.target === null) {
             this.findTarget();
         }
 
         if (this.shootCooldown <= 0 && this.target !== null) {
             this.shoot();
-            this.shootCooldown = (this.type as TowerType).shootCooldownMax;
+            this.shootCooldown = (this.eType as TowerType).shootCooldownMax;
         } else {
             this.shootCooldown -= 1;
         }
+
+        return false;
     }
 
     shoot() {
-        const speed = (this.type as TowerType).speed;
+        const speed = this.eType.speed;
         const dir = Vec2.subtract(this.target!.pos, this.pos);
         dir.normalize();
         dir.scale(speed);
+        const projHead = dir;
 
-        Game.level?.projectiles.push(
-            Projectile.newFromCenter(
-                this.center,
+        const center = this.center;
+
+        const entity = Game.level?.projectiles.reviveEntityMustHandle();
+        if (entity !== undefined) {
+            entity.injectData(
+                center.x,
+                center.y,
+                true,
+                0,
+                projHead.x,
+                projHead.y,
+                1,
                 ProjectileType.BALL,
-                false,
-                dir,
-                10,
-            ),
-        );
+            );
+        } else {
+            Game.level?.projectiles.push(
+                new Projectile(
+                    center.x,
+                    center.y,
+                    true,
+                    1,
+                    projHead.x,
+                    projHead.y,
+                    1,
+                    ProjectileType.BALL,
+                ),
+            );
+        }
     }
 
     findTarget() {
         const potEnem = Game.level?.enemies.at(0);
-        if (potEnem !== undefined && !potEnem.dead) {
+        if (potEnem !== undefined) {
             potEnem.addLock(this);
             this.target = potEnem;
         }
@@ -250,7 +355,7 @@ export class Tower extends Entity {
 
 interface ProjectileTypeArgs extends EntityTypeArgs {}
 
-export class ProjectileType extends Type {
+export class ProjectileType extends EntityType {
     static BALL = new ProjectileType({
         size: new Vec2(16, 16),
         maxHealth: 0,
@@ -268,58 +373,85 @@ export class ProjectileType extends Type {
     }
 }
 
-export class Projectile extends Entity {
-    static newFromCenter(
-        center: Vec2,
-        type: ProjectileType,
-        dead: boolean,
-        vel: Vec2,
-        damage: number,
-    ): Projectile {
-        center.x -= type.size.x / 2;
-        center.y -= type.size.y / 2;
-        return new Projectile(center, ProjectileType.BALL, dead, vel, damage);
-    }
+export class Projectile extends Entity<ProjectileType> {
+    public vel: Vec2 = new Vec2(0, 0);
+
     constructor(
-        pos: Vec2,
-        type: ProjectileType,
-        dead: boolean,
-        public vel: Vec2,
+        x: number,
+        y: number,
+        isCenter: boolean,
+        health: number,
+        velX: number,
+        velY: number,
         public damage: number,
+        public eType: ProjectileType,
     ) {
-        super(pos, type, dead, 0);
+        super(
+			x,
+			y,
+			isCenter,
+			eType,
+			health,
+        );
+        this.vel.x = velX;
+        this.vel.y = velY;
+    }
+
+    injectData(
+        x: number,
+        y: number,
+        isCenter: boolean,
+        health: number,
+        velX: number,
+        velY: number,
+        damage: number,
+        eType: ProjectileType,
+    ) {
+        this.injectEntityData(
+			x,
+			y,
+			isCenter,
+			eType,
+            health,
+        );
+        this.vel.x = velX;
+        this.vel.y = velY;
+        this.damage = damage;
+        this.eType = eType;
     }
 
     draw(view: Viewport) {
         view.fillRect(
             this.pos.x,
             this.pos.y,
-            this.type.size.x,
-            this.type.size.y,
+            this.eType.size.x,
+            this.eType.size.y,
             "orange",
         );
     }
 
-    update() {
+    update(): hasDied {
         this.pos.x += this.vel.x;
         this.pos.y += this.vel.y;
 
         if (Game.level !== null) {
             if (
-                this.pos.x + this.type.size.x <
+                this.pos.x + this.eType.size.x <
                     0 - Game.level.desc.size.x / 2 ||
                 this.pos.x > Game.level.desc.size.x / 2
             ) {
-                this.dead = true;
+                return true;
             }
             if (
-                this.pos.y + this.type.size.y <
+                this.pos.y + this.eType.size.y <
                     0 - Game.level.desc.size.y / 2 ||
                 this.pos.y > Game.level.desc.size.y / 2
             ) {
-                this.dead = true;
+                return true;
             }
         }
+
+        return false;
     }
 }
 
@@ -328,7 +460,7 @@ interface EnemyTypeArgs extends EntityTypeArgs {
     isArmored: boolean;
     maxHealth: number;
 }
-export class EnemyType extends Type {
+export class EnemyType extends EntityType {
     static SMALL = new EnemyType({
         size: new Vec2(10, 10),
         doCollision: true,
@@ -356,29 +488,72 @@ export class EnemyType extends Type {
     }
 }
 
-export class Enemy extends Entity {
+export class Enemy extends Entity<EnemyType> {
     static SPEED = 1;
 
-    target: Entity | null = null;
-    lockedOnMe: Tower[] = [];
-    health: number;
+    static reuseOrCreate(
+        level: Level,
+        x: number,
+        y: number,
+        isCenter: boolean,
+        eType: EnemyType,
+        health: number,
+    ) {
+        const entity = level.enemies.reviveEntityMustHandle();
+        if (entity !== undefined) {
+            entity.injectData(x, y, true, EnemyType.SMALL, 1);
+        } else {
+            level.enemies.push(new Enemy(x, y, isCenter, eType, health));
+        }
+    }
 
-    constructor(pos: Vec2, type: EnemyType, dead: boolean) {
-        super(pos, type, dead, 10);
-        this.health = type.maxHealth;
+    target: Entity<any> | null = null;
+    lockedOnMe: Tower[] = [];
+
+    constructor(
+        x: number,
+        y: number,
+        isCenter: boolean,
+        public eType: EnemyType,
+        health: number,
+    ) {
+        super(
+			x,
+			y,
+			isCenter,
+			eType,
+            health,
+        );
+    }
+
+    injectData(
+        x: number,
+        y: number,
+        isCenter: boolean,
+        eType: EnemyType,
+        health: number,
+    ) {
+        this.injectEntityData(
+			x,
+			y,
+			isCenter,
+			eType,
+            health,
+        );
+        this.eType = eType;
     }
 
     draw(cam: Viewport) {
         cam.fillRect(
             this.pos.x,
             this.pos.y,
-            this.type.size.x,
-            this.type.size.y,
+            this.eType.size.x,
+            this.eType.size.y,
             "red",
         );
     }
 
-    update() {
+    update(): hasDied {
         if (this.target === null) {
             this.findTarget();
         }
@@ -388,13 +563,17 @@ export class Enemy extends Entity {
             if (dir.length > 0.3) {
                 dir.normalize();
                 dir.scale(Enemy.SPEED);
-                this.pos.add(dir);
-            }
+                this.pos.add(dir); }
         }
+
+        if (this.markDead) {
+            this.cleanup();
+        }
+        return this.markDead;
     }
 
     findTarget() {
-        this.target = Game.level?.buildings[0] as Entity;
+        this.target = Game.level?.buildings[0] as Entity<any>;
     }
 
     //target lock
@@ -411,9 +590,7 @@ export class Enemy extends Entity {
         }
     }
 
-    die() {
-		this.dead = true;
-
+    cleanup() {
         for (const tower of this.lockedOnMe) {
             tower.notifyTargetDied();
         }
@@ -422,62 +599,64 @@ export class Enemy extends Entity {
         (this.lockedOnMe as any) = null;
     }
 
-	doCollisionResults(oEntity: Entity): void {
-		if(oEntity instanceof Projectile) {
-			this.die();
-		}
-	}
+    doCollisionResults(oEntity: Entity<any>): void {
+        if (oEntity instanceof Projectile) {
+            this.markDead = true;
+        }
+    }
 }
 
 /*
- * This is likely over engineerd bullshit.
  * Content is explicitly unordered!
  */
-export class EntityList<T extends Entity> extends Array<T> {
+export class EntityList<T extends Entity<any>> extends Array<T> {
+    public deadList: T[] = [];
+
     constructor() {
         super();
     }
 
+    //operate on content
     addToCm(cm: CollisionMap) {
         this.forEach((entity) => {
-            if (!entity.dead) {
-                cm.add(entity);
-            }
+            cm.add(entity);
         });
     }
 
     draw(cam: Viewport) {
         this.forEach((entity) => {
-            if (!entity.dead) {
-                entity.draw(cam);
-            }
+            entity.draw(cam);
         });
     }
 
     update() {
-        this.forEach((entity) => {
-            if (!entity.dead) {
-                entity.update();
+        for (let i = 0; i < this.length; i++) {
+            const element = this[i];
+            const hasDied = element.update();
+            if (hasDied) {
+                this.deadList.push(element);
+                fastDelete(i, this);
+                i -= 1;
             }
+        }
+
+        this.forEach((entity) => {
+            entity.update();
         });
     }
 
     doCollision() {
         for (const entity of this) {
-			if(!entity.dead) {
-				entity.checkForCollisions();
-			}
+            entity.checkForCollisions();
         }
     }
 
-    //likely premature optimization nonsense
-    fastPush(pushable: T): void {
-        for (let i = 0; i < this.length; i++) {
-            if (this[i].dead) {
-                this[i] = pushable;
-                return;
-            }
+    //modify
+    reviveEntityMustHandle() {
+        const entity = this.deadList.pop();
+        if (entity !== undefined) {
+            this.push(entity);
         }
-        this.push(pushable);
+        return entity;
     }
 }

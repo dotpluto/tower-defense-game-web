@@ -19,7 +19,7 @@ export class CollisionMap {
     chSizeX: number;
     chSizeY: number;
 
-    columns: Entity[][][];
+    columns: Entity<any>[][][];
 
     constructor(public mapWidth: number, public mapHeight: number) {
         //determininig size and making it divisible by two
@@ -50,12 +50,12 @@ export class CollisionMap {
         }
     }
 
-    add(entity: Entity) {
+    add(entity: Entity<any>) {
         //clearing old
         entity.sections = [];
 
         const topLeft = entity.pos;
-        const size = entity.type.size;
+        const size = entity.eType.size;
 
         //the smallest an enemy can be is a point so it must occupy at least one chunk
         let chunkBoxW = 1;
@@ -96,7 +96,7 @@ export class CollisionMap {
         }
     }
 
-    private addIfExists(entity: Entity, x: number, y: number) {
+    private addIfExists(entity: Entity<any>, x: number, y: number) {
         if (
             x >= 0 &&
             y >= 0 &&
