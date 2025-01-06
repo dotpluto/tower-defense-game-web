@@ -1,6 +1,33 @@
 "use strict";
 
+/*
+ * This is both the vector class and support for vector operations while avoiding object allocation.
+*/
 export class Vec2 {
+	//return "registers" for objectless vector manipulation
+	static numX: number = 0;
+	static numY: number = 0;
+
+	//for non class vectors
+	static numNormalize(x: number, y: number) {
+		const length = this.numLength(x, y);
+		Vec2.numX = x / length;
+		Vec2.numY = y / length;
+	}
+
+	static numScale(x: number, y: number, scalar: number) {
+		Vec2.numX = x * scalar;
+		Vec2.numY = y * scalar;
+	}
+
+	static numLength(x: number, y: number) {
+		return Math.sqrt(x*x + y*y);
+	}
+
+	static numRandomUnit() {
+		this.numNormalize(2 * Math.random() - 1 , 2 * Math.random() - 1);
+	}
+
     constructor(
         public x: number,
         public y: number,
@@ -29,15 +56,11 @@ export class Vec2 {
         posB: Vec2,
         sizeB: Vec2,
     ): boolean {
-        if (posA.x > posB.x + sizeB.x || posA.x + sizeA.x < sizeB.x) {
-            return false;
+        if (posA.x + sizeA.x > posB.x && posA.x < posB.x + sizeB.x && posA.y + sizeA.x > posB.y && posA.y < posB.y + sizeB.y) {
+            return true;
         }
 
-        if (posA.y > posB.y + sizeB.y || posA.y + sizeA.y < posB.y) {
-            return false;
-        }
-
-        return true;
+        return false;
     }
 
 

@@ -11,6 +11,8 @@ export class ScreenManager {
 
     static markedForRedraw = false;
 
+	static eventCapturedSymbol = Symbol("eventCaptured");
+
     //screens
     static START_SCREEN: Screen;
     static GAME_SCREEN: Screen;
@@ -48,7 +50,17 @@ export class ScreenManager {
             ScreenManager.activeScreen?.draw();
         });
 
+
         //input forwarding to active screen
+
+		window.addEventListener("contextmenu", (event) => {
+			event.preventDefault();
+		});
+
+		canvas.addEventListener("mouseleave", (event) => {
+			ScreenManager.activeScreen?.mouseLeaveEvent(event);
+		});
+		
         canvas.addEventListener("mousemove", (event) => {
             ScreenManager.activeScreen?.mouseMoveEvent(event);
 			ScreenManager.redrawIfShould();
@@ -60,6 +72,8 @@ export class ScreenManager {
         });
 
         canvas.addEventListener("mousedown", (event) => {
+			event.preventDefault();
+			(event as any)[ScreenManager.eventCapturedSymbol] = false;
             this.activeScreen?.mouseDownEvent(event);
 			ScreenManager.redrawIfShould();
         });

@@ -47,6 +47,14 @@ export class Viewport {
         return worldY + this.height / 2 - this.center.y;
     }
 
+	viewToWorldX(viewX: number) {
+		return viewX - this.width / 2 + this.center.x;
+	}
+
+	viewToWorldY(viewY: number) {
+		return viewY - this.height / 2 + this.center.y;
+	}
+
     get width() {
         return canvas.width;
     }

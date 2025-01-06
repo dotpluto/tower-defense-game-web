@@ -14,6 +14,7 @@ import {
 } from "modules/entity.js";
 import { Viewport, ctx, canvas } from "modules/graphics.js";
 import { SpawnMan } from "modules/spawnLogic.js";
+import { Game } from "modules/game.js";
 
 export class LevelDescriptor {
     constructor(
@@ -42,16 +43,7 @@ export class Level {
     constructor(public desc: LevelDescriptor) {
         this.cm = new CollisionMap(desc.size.x, desc.size.y);
 
-        this.buildings.push(
-			new Building(0, 0, true, BuildingType.HQ, 100)
-        );
-
-        this.enemies.push(
-            new Enemy(400, 0, true, EnemyType.SMALL, 0),
-        );
-
-		this.towers.push(new Tower(200, -50, true, TowerType.MG, 100));
-		this.towers.push(new Tower(200, 100, true, TowerType.MG, 100));
+		this.buildings.push(new Building(0, 0, true, BuildingType.HQ, 100));
     }
 
     draw() {
@@ -66,6 +58,9 @@ export class Level {
         this.enemies.draw(this.view);
         this.projectiles.draw(this.view);
 
+		if(Game.selTowType !== null) {
+			Tower.drawBlueprint(this.view, this.view.viewToWorldX(Game.screen!.lastMouseX), this.view.viewToWorldY(Game.screen!.lastMouseY), Game.selTowType);
+		}
     }
 
     update() {
@@ -86,6 +81,14 @@ export class Level {
         this.towers.update();
         this.enemies.update();
         this.projectiles.update();
+
+        this.buildings.cull();
+        this.towers.cull();
+        this.enemies.cull();
+        this.projectiles.cull();
+		
+		//spawning logic
+		this.spawnMan.update();
 
         this.frameCount += 1;
     }

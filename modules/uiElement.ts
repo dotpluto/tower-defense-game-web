@@ -27,7 +27,7 @@ export interface UIELementArgs {
 export abstract class UIElement {
     horizontal: HorizontalAnchorPoint;
     vertical: VerticalAnchorPoint;
-    offset: Vec2;
+    offset: Vec2; //offset from anchor
     size: Vec2;
 
     constructor(args: UIELementArgs) {
@@ -183,26 +183,26 @@ export class UIButton extends UIElement {
     }
 }
 
-export interface UIIconButtonArgs extends UIELementArgs {
+export interface UIIconButtonArgs extends UIButtonArgs {
     icon: HTMLOrSVGImageElement;
+	clickCallback: () => void;
 }
 
 export class UIIconButton extends UIButton {
     icon: HTMLOrSVGImageElement;
-    constructor(args: UIIconButton) {
+    constructor(args: UIIconButtonArgs) {
         super(args);
         this.icon = args.icon;
     }
 
     mouseDownEvent(e: MouseEvent) {
         if (this.boundRect.isPointInside(new Vec2(e.clientX, e.clientY))) {
+			(e as any)[ScreenManager.eventCapturedSymbol] = true;
             this.clickCallback(e);
         }
     }
 
     draw(): void {
-        let x = this.getAnchorHorizontal();
-        let y = this.getAnchorVertical();
-        ctx.drawImage(this.icon, x, y, this.size.x, this.size.y);
+        ctx.drawImage(this.icon, this.centerX - this.size.x / 2, this.centerY - this.size.y / 2, this.size.x, this.size.y);
     }
 }

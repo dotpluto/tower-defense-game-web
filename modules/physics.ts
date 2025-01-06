@@ -67,11 +67,6 @@ export class CollisionMap {
         chunkBoxW += Math.floor(size.x / this.chSizeX);
         chunkBoxH += Math.floor(size.y / this.chSizeY);
 
-        const remSizeX = size.x % this.chSizeX;
-        const remSizeY = size.y % this.chSizeY;
-
-        const leftOffset = topLeft.x % this.chSizeX;
-
         const leftFlipped =
             topLeft.x < 0
                 ? this.chSizeX - Math.abs(topLeft.x % this.chSizeX)

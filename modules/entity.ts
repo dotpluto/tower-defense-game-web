@@ -68,15 +68,21 @@ export abstract class Entity<T extends EntityType> {
 
     draw(_: Viewport): void {}
 
-    update(): hasDied {
-        return false;
-    }
+    update() {}
 
     get center(): Vec2 {
         return new Vec2(
             this.pos.x + this.eType.size.x / 2,
             this.pos.y + this.eType.size.y / 2,
         );
+    }
+
+    get centX() {
+        return this.pos.x + this.eType.size.x / 2;
+    }
+
+    get centY() {
+        return this.pos.y + this.eType.size.y / 2;
     }
 
     checkForCollisions() {
@@ -109,7 +115,6 @@ export abstract class Entity<T extends EntityType> {
     doCollisionResults(_: Entity<any>): void {}
 }
 
-
 interface BuildingTypeArgs extends EntityTypeArgs {}
 
 export class BuildingType extends EntityType {
@@ -126,10 +131,12 @@ export class BuildingType extends EntityType {
         super(args);
     }
 
-    draw(build: Building, cam: Viewport) {
+    draw(build: Building, view: Viewport) {
         switch (this) {
             case BuildingType.HQ:
-                cam.drawImage(BuildingType.HQ_TEX, build.pos.x, build.pos.y);
+                view.drawImage(BuildingType.HQ_TEX, build.pos.x, build.pos.y);
+				const healthSize = (build.health / this.maxHealth) * this.size.x;
+				view.fillRect(build.pos.x, build.pos.y + this.size.x + 1, healthSize, 2, "red");
                 break;
             default:
                 throw new Error("Tried to draw a building that doesn't exist.");
@@ -140,6 +147,9 @@ export class BuildingType extends EntityType {
 }
 
 export class Building extends Entity<BuildingType> {
+	static hurtCooldownMax = 10;
+	public hurtCooldown: number = 0;
+
     static reuseOrCreate(
         level: Level,
         x: number,
@@ -182,6 +192,19 @@ export class Building extends Entity<BuildingType> {
     draw(cam: Viewport) {
         this.eType.draw(this, cam);
     }
+
+	update(): void {
+	    this.hurtCooldown -= 1;
+	}
+
+	doCollisionResults(e: Entity<any>): void {
+		if(e instanceof Enemy) {
+			if(this.hurtCooldown <= 0) {
+				this.hurtCooldown = Building.hurtCooldownMax;
+				this.health -= 1;
+			}
+		}
+	}
 }
 
 interface TowerTypeArgs extends EntityTypeArgs {
@@ -202,7 +225,7 @@ export class TowerType extends BuildingType {
         maxHealth: 0,
         doCollision: false,
         cost: 55,
-        shootCooldownMax: 6,
+        shootCooldownMax: 20,
         damage: 2,
         speed: 8,
     });
@@ -222,7 +245,7 @@ export class TowerType extends BuildingType {
         maxHealth: 0,
         doCollision: false,
         cost: 100,
-        shootCooldownMax: 10,
+        shootCooldownMax: 20,
         damage: 16,
         speed: 8,
     });
@@ -249,9 +272,13 @@ export class Tower extends Entity<TowerType> {
         if (tower !== undefined) {
             tower.injectData(x, y, true, eType, 100);
         } else {
-            level.buildings.push(new Building(x, y, isCenter, eType, health));
+            level.towers.push(new Tower(x, y, isCenter, eType, health));
         }
     }
+
+	static drawBlueprint(view: Viewport, centX: number, centY: number, eType: TowerType) {
+		view.fillRect(centX - eType.size.x / 2, centY - eType.size.y / 2, eType.size.x, eType.size.y, "blue");
+	}
 
     public eType: TowerType;
     public shootCooldown: number = 0;
@@ -289,9 +316,7 @@ export class Tower extends Entity<TowerType> {
     }
 
     update(): hasDied {
-        if (this.target === null) {
-            this.findTarget();
-        }
+        this.findTarget();
 
         if (this.shootCooldown <= 0 && this.target !== null) {
             this.shoot();
@@ -304,47 +329,45 @@ export class Tower extends Entity<TowerType> {
     }
 
     shoot() {
-        const speed = this.eType.speed;
-        const dir = Vec2.subtract(this.target!.pos, this.pos);
-        dir.normalize();
-        dir.scale(speed);
-        const projHead = dir;
+        //this.target must be nonnull
+        let dirX = this.target!.centX - this.centX;
+        let dirY = this.target!.centY - this.centY;
 
-        const center = this.center;
+        Vec2.numNormalize(dirX, dirY);
+        dirX = Vec2.numX;
+        dirY = Vec2.numY;
 
-        const entity = Game.level?.projectiles.reviveEntityMustHandle();
-        if (entity !== undefined) {
-            entity.injectData(
-                center.x,
-                center.y,
-                true,
-                0,
-                projHead.x,
-                projHead.y,
-                1,
-                ProjectileType.BALL,
-            );
-        } else {
-            Game.level?.projectiles.push(
-                new Projectile(
-                    center.x,
-                    center.y,
-                    true,
-                    1,
-                    projHead.x,
-                    projHead.y,
-                    1,
-                    ProjectileType.BALL,
-                ),
-            );
-        }
+        Vec2.numScale(dirX, dirY, this.eType.speed);
+        dirX = Vec2.numX;
+        dirY = Vec2.numY;
+
+		const type: ProjectileType = this.eType === TowerType.MG ? ProjectileType.BALL : ProjectileType.ROCKET;
+        Projectile.reuseOrCreate(
+            Game.level!,
+            this.centX,
+            this.centY,
+            true,
+			type,
+            dirX,
+            dirY,
+        );
     }
 
     findTarget() {
-        const potEnem = Game.level?.enemies.at(0);
+        const potEnem = Game.level!.enemies.getRandom();
         if (potEnem !== undefined) {
-            potEnem.addLock(this);
-            this.target = potEnem;
+            if (this.target === null) {
+                potEnem.addShooter(this);
+                this.target = potEnem;
+            } else {
+                let dist = Enemy.getDist(this, this.target);
+                let nDist = Enemy.getDist(this, potEnem);
+                if (nDist < dist) {
+                    this.target.removeShooter(this);
+                    this.target = potEnem;
+                    potEnem.addShooter(this);
+                }
+            }
         }
     }
 
@@ -357,7 +380,7 @@ interface ProjectileTypeArgs extends EntityTypeArgs {}
 
 export class ProjectileType extends EntityType {
     static BALL = new ProjectileType({
-        size: new Vec2(16, 16),
+        size: new Vec2(25, 25),
         maxHealth: 0,
         hasHealth: false,
         doCollision: true,
@@ -374,25 +397,37 @@ export class ProjectileType extends EntityType {
 }
 
 export class Projectile extends Entity<ProjectileType> {
+    static reuseOrCreate(
+        level: Level,
+        x: number,
+        y: number,
+        isCenter: boolean,
+        eType: ProjectileType,
+        velX: number,
+        velY: number,
+    ) {
+        const entity = level.projectiles.reviveEntityMustHandle();
+        if (entity !== undefined) {
+            entity.injectData(x, y, isCenter, velX, velY, 1, eType);
+        } else {
+            level.projectiles.push(
+                new Projectile(x, y, isCenter, velX, velY, 1, eType),
+            );
+        }
+    }
+
     public vel: Vec2 = new Vec2(0, 0);
 
     constructor(
         x: number,
         y: number,
         isCenter: boolean,
-        health: number,
         velX: number,
         velY: number,
         public damage: number,
         public eType: ProjectileType,
     ) {
-        super(
-			x,
-			y,
-			isCenter,
-			eType,
-			health,
-        );
+        super(x, y, isCenter, eType, 0);
         this.vel.x = velX;
         this.vel.y = velY;
     }
@@ -401,19 +436,12 @@ export class Projectile extends Entity<ProjectileType> {
         x: number,
         y: number,
         isCenter: boolean,
-        health: number,
         velX: number,
         velY: number,
         damage: number,
         eType: ProjectileType,
     ) {
-        this.injectEntityData(
-			x,
-			y,
-			isCenter,
-			eType,
-            health,
-        );
+        this.injectEntityData(x, y, isCenter, eType, 0);
         this.vel.x = velX;
         this.vel.y = velY;
         this.damage = damage;
@@ -421,37 +449,32 @@ export class Projectile extends Entity<ProjectileType> {
     }
 
     draw(view: Viewport) {
+		const color = this.eType === ProjectileType.BALL? "orange" : "green";
         view.fillRect(
             this.pos.x,
             this.pos.y,
             this.eType.size.x,
             this.eType.size.y,
-            "orange",
+			color,
         );
     }
 
-    update(): hasDied {
+    update() {
         this.pos.x += this.vel.x;
         this.pos.y += this.vel.y;
 
-        if (Game.level !== null) {
-            if (
-                this.pos.x + this.eType.size.x <
-                    0 - Game.level.desc.size.x / 2 ||
-                this.pos.x > Game.level.desc.size.x / 2
-            ) {
-                return true;
-            }
-            if (
-                this.pos.y + this.eType.size.y <
-                    0 - Game.level.desc.size.y / 2 ||
-                this.pos.y > Game.level.desc.size.y / 2
-            ) {
-                return true;
-            }
+        if (
+            this.pos.x + this.eType.size.x < -Game.level!.desc.size.x / 2 ||
+            this.pos.x > Game.level!.desc.size.x / 2
+        ) {
+            this.markDead = true;
         }
-
-        return false;
+        if (
+            this.pos.y + this.eType.size.y < -Game.level!.desc.size.y / 2 ||
+            this.pos.y > Game.level!.desc.size.y / 2
+        ) {
+            this.markDead = true;
+        }
     }
 }
 
@@ -462,7 +485,7 @@ interface EnemyTypeArgs extends EntityTypeArgs {
 }
 export class EnemyType extends EntityType {
     static SMALL = new EnemyType({
-        size: new Vec2(10, 10),
+        size: new Vec2(40, 40),
         doCollision: true,
         hasHealth: true,
         maxHealth: 10,
@@ -489,7 +512,9 @@ export class EnemyType extends EntityType {
 }
 
 export class Enemy extends Entity<EnemyType> {
-    static SPEED = 1;
+    static SPEED = 4;
+
+    public eType: EnemyType;
 
     static reuseOrCreate(
         level: Level,
@@ -507,6 +532,12 @@ export class Enemy extends Entity<EnemyType> {
         }
     }
 
+    static getDist(a: Entity<any>, b: Entity<any>) {
+        let difX = a.centX - b.centX;
+        let difY = a.centY - b.centY;
+        return Vec2.numLength(difX, difY);
+    }
+
     target: Entity<any> | null = null;
     lockedOnMe: Tower[] = [];
 
@@ -514,16 +545,12 @@ export class Enemy extends Entity<EnemyType> {
         x: number,
         y: number,
         isCenter: boolean,
-        public eType: EnemyType,
+        eType: EnemyType,
         health: number,
     ) {
-        super(
-			x,
-			y,
-			isCenter,
-			eType,
-            health,
-        );
+        super(x, y, isCenter, eType, health);
+        this.lockedOnMe = [];
+        this.eType = eType;
     }
 
     injectData(
@@ -533,14 +560,9 @@ export class Enemy extends Entity<EnemyType> {
         eType: EnemyType,
         health: number,
     ) {
-        this.injectEntityData(
-			x,
-			y,
-			isCenter,
-			eType,
-            health,
-        );
+        this.injectEntityData(x, y, isCenter, eType, health);
         this.eType = eType;
+        this.lockedOnMe = [];
     }
 
     draw(cam: Viewport) {
@@ -553,7 +575,7 @@ export class Enemy extends Entity<EnemyType> {
         );
     }
 
-    update(): hasDied {
+    update() {
         if (this.target === null) {
             this.findTarget();
         }
@@ -563,7 +585,8 @@ export class Enemy extends Entity<EnemyType> {
             if (dir.length > 0.3) {
                 dir.normalize();
                 dir.scale(Enemy.SPEED);
-                this.pos.add(dir); }
+                this.pos.add(dir);
+            }
         }
 
         if (this.markDead) {
@@ -573,11 +596,14 @@ export class Enemy extends Entity<EnemyType> {
     }
 
     findTarget() {
-        this.target = Game.level?.buildings[0] as Entity<any>;
+        const target = Game.level?.buildings[0] as Entity<any>;
+		if(target !== undefined) {
+			this.target = target;
+		}
     }
 
     //target lock
-    addLock(shooter: Tower) {
+    addShooter(shooter: Tower) {
         this.lockedOnMe.push(shooter);
     }
 
@@ -602,6 +628,15 @@ export class Enemy extends Entity<EnemyType> {
     doCollisionResults(oEntity: Entity<any>): void {
         if (oEntity instanceof Projectile) {
             this.markDead = true;
+        } else if (oEntity instanceof Enemy) {
+            let difX = oEntity.pos.x - this.pos.x;
+            let difY = oEntity.pos.y - this.pos.y;
+            Vec2.numNormalize(difX, difY);
+            difX = Vec2.numX;
+            difY = Vec2.numY;
+            Vec2.numScale(difX, difY, 8);
+            this.pos.x -= difX;
+            this.pos.y -= difY;
         }
     }
 }
@@ -631,18 +666,19 @@ export class EntityList<T extends Entity<any>> extends Array<T> {
 
     update() {
         for (let i = 0; i < this.length; i++) {
-            const element = this[i];
-            const hasDied = element.update();
-            if (hasDied) {
-                this.deadList.push(element);
+            this[i].update();
+        }
+    }
+
+    cull() {
+        for (let i = 0; i < this.length; i++) {
+            const entity = this[i];
+            if (entity.markDead) {
+                this.deadList.push(entity);
                 fastDelete(i, this);
                 i -= 1;
             }
         }
-
-        this.forEach((entity) => {
-            entity.update();
-        });
     }
 
     doCollision() {
@@ -655,8 +691,13 @@ export class EntityList<T extends Entity<any>> extends Array<T> {
     reviveEntityMustHandle() {
         const entity = this.deadList.pop();
         if (entity !== undefined) {
+            entity.markDead = false;
             this.push(entity);
         }
         return entity;
+    }
+
+    getRandom(): T {
+        return this[Math.floor(Math.random() * this.length)];
     }
 }
