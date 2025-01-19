@@ -7,17 +7,11 @@ import {
     UIIconButton,
 } from "modules/uiElement.js";
 import { Vec2 } from "modules/vector2.js";
-import { ScreenManager } from "modules/screenManager.js";
+import { CapturableMouseEvent, ScreenManager } from "modules/screenManager.js";
 import { Game } from "modules/game.js";
 import { canvas, ctx } from "modules/graphics.js";
 import { loadTexture } from "modules/assetManagement.js";
-import { Rect } from "modules/rectangle.js";
 import { TowerType } from "modules/entity.js";
-
-export enum EventState {
-    CAPTURED,
-    UNCAPTURED,
-}
 
 export abstract class Screen {
     uiElements: UIElement[] = [];
@@ -44,7 +38,7 @@ export abstract class Screen {
         }
     }
 
-    mouseDownEvent(event: MouseEvent) {
+    mouseDownEvent(event: CapturableMouseEvent) {
         for (const elem of this.uiElements) {
             elem.mouseDownEvent(event);
         }
@@ -184,7 +178,7 @@ export class GameScreen extends Screen {
 		this.isMoveDragging = false;
     }
 
-    mouseDownEvent(event: MouseEvent): void {
+    mouseDownEvent(event: CapturableMouseEvent): void {
         super.mouseDownEvent(event);
         this.isMouseDown = true;
         if (!(event as any)[ScreenManager.eventCapturedSymbol]) {

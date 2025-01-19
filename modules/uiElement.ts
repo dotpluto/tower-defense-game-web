@@ -2,7 +2,7 @@
 
 import { Rect } from "modules/rectangle.js";
 import { Vec2 } from "modules/vector2.js";
-import { ScreenManager } from "modules/screenManager.js";
+import { CapturableMouseEvent, ScreenManager } from "modules/screenManager.js";
 import { canvas, ctx } from "modules/graphics.js";
 import { loadTexture } from "modules/assetManagement.js";
 
@@ -71,7 +71,7 @@ export abstract class UIElement {
 
     mouseMoveEvent(_: MouseEvent) {}
 
-    mouseDownEvent(_: MouseEvent) {}
+    mouseDownEvent(_: CapturableMouseEvent) {}
 
 	mouseUpEvent(_: MouseEvent) {}
 
@@ -176,7 +176,7 @@ export class UIButton extends UIElement {
         }
     }
 
-    mouseDownEvent(e: MouseEvent) {
+    mouseDownEvent(e: CapturableMouseEvent) {
         if (this.boundRect.isPointInside(new Vec2(e.clientX, e.clientY))) {
             this.clickCallback(e);
         }
@@ -195,9 +195,9 @@ export class UIIconButton extends UIButton {
         this.icon = args.icon;
     }
 
-    mouseDownEvent(e: MouseEvent) {
+    mouseDownEvent(e: CapturableMouseEvent) {
         if (this.boundRect.isPointInside(new Vec2(e.clientX, e.clientY))) {
-			(e as any)[ScreenManager.eventCapturedSymbol] = true;
+			CapturableMouseEvent.capture(e);
             this.clickCallback(e);
         }
     }

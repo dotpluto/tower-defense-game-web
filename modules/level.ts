@@ -50,7 +50,7 @@ export class Level {
         ctx.fillStyle = this.desc.color;
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-        this.cm.debugDraw(this);
+        //this.cm.debugDraw(this);
 
         //updating
         this.buildings.draw(this.view);
