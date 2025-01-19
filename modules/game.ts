@@ -12,7 +12,7 @@ export class Game {
 	static selTowType: TowerType | null = null;
 
 	static placeTower() {
-		if(this.selTowType !== null) {
+		if(this.selTowType !== null && this.selTowType.cost <= Game.level!.money) {
 			const centerX = this.level!.view.viewToWorldX(this.screen!.lastMouseX);
 			const centerY = this.level!.view.viewToWorldY(this.screen!.lastMouseY);
 
@@ -30,6 +30,7 @@ export class Game {
 			}
 
 			Tower.reuseOrCreate(this.level!, centerX, centerY, true, this.selTowType, 0);
+			Game.level!.money -= this.selTowType.cost;
 		}
 	}
 
@@ -49,7 +50,7 @@ export class Game {
 
 	//checking if the mouse currently is over something that can be clicked on
 	static checkMouseInteract(): boolean {
-		//TODO!!!!
+		//TODO Add something to click
 		return false;
 	}
 

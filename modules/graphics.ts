@@ -6,17 +6,9 @@ export const ctx = canvas.getContext("2d", {
     antialias: false,
 }) as CanvasRenderingContext2D;
 
-export function drawImageRelative(
-    img: HTMLOrSVGImageElement,
-    x: number,
-    y: number,
-) {
-    ctx.drawImage(img, x + canvas.width / 2, y + canvas.height / 2);
-}
-
 /**
  * Class that represents a viewpoint.
- * It's size is equal to the canvas size.
+ * It's size is equal to the size of the canvas.
  */
 export class Viewport {
     constructor(public center: Vec2) {}
@@ -56,10 +48,20 @@ export class Viewport {
 	}
 
     get width() {
-        return canvas.width;
+		return Display.width;
     }
 
     get height() {
-        return canvas.height;
+		return Display.height;
     }
+}
+
+export class Display {
+	static get width() {
+		return canvas.width;
+	}
+
+	static get height() {
+		return canvas.height;
+	}
 }

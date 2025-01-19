@@ -1,10 +1,13 @@
 import {
     UIText,
-    HorizontalAnchorPoint,
-    VerticalAnchorPoint,
+    HAnchPoint,
+    VAnchPoint,
     UIButton,
     UIElement,
     UIIconButton,
+    addChild,
+    IUIParent,
+    UIScore,
 } from "modules/uiElement.js";
 import { Vec2 } from "modules/vector2.js";
 import { CapturableMouseEvent, ScreenManager } from "modules/screenManager.js";
@@ -13,8 +16,9 @@ import { canvas, ctx } from "modules/graphics.js";
 import { loadTexture } from "modules/assetManagement.js";
 import { TowerType } from "modules/entity.js";
 
-export abstract class Screen {
+export abstract class Screen implements IUIParent {
     uiElements: UIElement[] = [];
+    children: UIElement[] = [];
     constructor(public liveRendering: boolean) {}
 
     draw() {
@@ -26,6 +30,7 @@ export abstract class Screen {
     open() {}
     close() {}
 
+    //event passdowns
     mouseMoveEvent(event: MouseEvent) {
         for (const elem of this.uiElements) {
             elem.mouseMoveEvent(event);
@@ -44,33 +49,52 @@ export abstract class Screen {
         }
     }
 
-    mouseLeaveEvent(event: MouseEvent) {}
+    mouseLeaveEvent(event: MouseEvent) {
+	}
+
+	resizeEvent() {
+		for (const elem of this.children) {
+			elem.computePos();
+		}
+	}
+
 }
 
 export class StartScreen extends Screen {
     constructor() {
         super(false);
-        this.uiElements.push(
-            UIText.new({
-                vertical: VerticalAnchorPoint.MIDDLE,
-                horizontal: HorizontalAnchorPoint.MIDDLE,
+        const particlesText = addChild(this, (parent) => {
+            return UIText.new({
+                parent: parent, //display
+                parHorAnch: HAnchPoint.MIDDLE,
+                parVerAnch: VAnchPoint.MIDDLE,
+                horAnch: HAnchPoint.MIDDLE,
+                verAnch: VAnchPoint.MIDDLE,
                 offset: new Vec2(0, 0),
-                size: new Vec2(0, 96),
+                size: new Vec2(300, 96),
                 text: "Particles",
-            }),
-        );
-        this.uiElements.push(
-            UIButton.new({
-                vertical: VerticalAnchorPoint.MIDDLE,
-                horizontal: HorizontalAnchorPoint.MIDDLE,
-                offset: new Vec2(0, 48 + 32),
-                size: new Vec2(0, 64),
+				resizeForTxt: true,
+            });
+        });
+        this.uiElements.push(particlesText);
+
+        const playButton = addChild(particlesText, (parent) => {
+            return UIButton.new({
+                parent: parent,
+                parHorAnch: HAnchPoint.MIDDLE,
+                parVerAnch: VAnchPoint.BOTTOM,
+                horAnch: HAnchPoint.MIDDLE,
+                verAnch: VAnchPoint.TOP,
                 text: "Play",
+				resizeForTxt: true,
+                offset: new Vec2(0, 0),
+                size: new Vec2(100, 64),
                 clickCallback: () => {
                     ScreenManager.setActiveScreen(ScreenManager.GAME_SCREEN);
                 },
-            }),
-        );
+            })
+        });
+		this.uiElements.push(playButton);
     }
 
     draw() {
@@ -87,10 +111,11 @@ export class StartScreen extends Screen {
 export class EndScreen extends Screen {
     constructor() {
         super(false);
+        /*
         this.uiElements.push(
             UIText.new({
-                vertical: VerticalAnchorPoint.MIDDLE,
-                horizontal: HorizontalAnchorPoint.MIDDLE,
+                vertical: VAnchPoint.MIDDLE,
+                horizontal: HAnchPoint.MIDDLE,
                 offset: new Vec2(0, 0),
                 size: new Vec2(0, 96),
                 text: "Game Over",
@@ -98,8 +123,8 @@ export class EndScreen extends Screen {
         );
         this.uiElements.push(
             UIButton.new({
-                vertical: VerticalAnchorPoint.MIDDLE,
-                horizontal: HorizontalAnchorPoint.MIDDLE,
+                vertical: VAnchPoint.MIDDLE,
+                horizontal: HAnchPoint.MIDDLE,
                 offset: new Vec2(0, 48 + 32),
                 size: new Vec2(0, 64),
                 text: "Retry",
@@ -108,6 +133,7 @@ export class EndScreen extends Screen {
                 },
             }),
         );
+		*/
     }
 
     draw() {
@@ -135,33 +161,62 @@ export class GameScreen extends Screen {
     constructor() {
         super(true);
         Game.screen = this;
-        this.uiElements.push(
-            new UIIconButton({
-                size: new Vec2(50, 50),
-                icon: GameScreen.mgIcon,
-                offset: new Vec2(25 + 5, -25),
-                horizontal: HorizontalAnchorPoint.LEFT,
-                vertical: VerticalAnchorPoint.MIDDLE,
-                text: "",
+
+		const firstButton = addChild(this, (parent) => {
+			return new UIIconButton({
+				parent: parent,
+				parHorAnch: HAnchPoint.LEFT,
+				parVerAnch: VAnchPoint.MIDDLE,
+                horAnch: HAnchPoint.LEFT,
+                verAnch: VAnchPoint.MIDDLE,
+				text: "",
+				resizeForTxt: false,
+				offset: new Vec2(0, 0),
+				icon: GameScreen.mgIcon,
+				size: new Vec2(50, 50),
                 clickCallback: () => {
                     Game.selTowType = TowerType.MG;
                 },
-            }),
-        );
+			});
+		});
+		this.uiElements.push(firstButton);
 
-        this.uiElements.push(
-            new UIIconButton({
-                size: new Vec2(50, 50),
-                icon: GameScreen.sniperIcon,
-                offset: new Vec2(25 + 5, 25),
-                horizontal: HorizontalAnchorPoint.LEFT,
-                vertical: VerticalAnchorPoint.MIDDLE,
-                text: "",
+		const secondButton = addChild(firstButton, (parent) => {
+			return new UIIconButton({
+				parent: parent,
+				parHorAnch: HAnchPoint.MIDDLE,
+				parVerAnch: VAnchPoint.BOTTOM,
+                horAnch: HAnchPoint.MIDDLE,
+                verAnch: VAnchPoint.TOP,
+				text: "",
+				resizeForTxt: false,
+				offset: new Vec2(0, 0),
+				icon: GameScreen.sniperIcon,
+				size: new Vec2(50, 50),
                 clickCallback: () => {
                     Game.selTowType = TowerType.SNIPER;
                 },
-            }),
-        );
+			});
+		});
+		this.uiElements.push(secondButton);
+
+		const score = addChild(this, (parent) => {
+			return new UIScore({
+				parent: parent,
+				parHorAnch: HAnchPoint.MIDDLE,
+				parVerAnch: VAnchPoint.TOP,
+                horAnch: HAnchPoint.MIDDLE,
+                verAnch: VAnchPoint.TOP,
+				text: "",
+				resizeForTxt: false,
+				offset: new Vec2(0, 0),
+				size: new Vec2(50, 50),
+				getScore() {
+				    return Game.level!.money.toString();
+				},
+			});
+		});
+		this.uiElements.push(score);
     }
 
     open() {
@@ -175,17 +230,16 @@ export class GameScreen extends Screen {
 
     mouseUpEvent(_: MouseEvent): void {
         this.isMouseDown = false;
-		this.isMoveDragging = false;
+        this.isMoveDragging = false;
     }
 
     mouseDownEvent(event: CapturableMouseEvent): void {
         super.mouseDownEvent(event);
         this.isMouseDown = true;
-        if (!(event as any)[ScreenManager.eventCapturedSymbol]) {
-			if (event.button === 0) {
-				Game.placeTower()
-			}
-			else if (event.button === 2) {
+        if (!CapturableMouseEvent.checkCaptured(event)) {
+            if (event.button === 0) {
+                Game.placeTower();
+            } else if (event.button === 2) {
                 this.isMoveDragging = !Game.checkMouseInteract();
                 if (this.isMoveDragging) {
                     this.lastDragX = event.clientX;

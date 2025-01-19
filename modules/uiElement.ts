@@ -3,68 +3,155 @@
 import { Rect } from "modules/rectangle.js";
 import { Vec2 } from "modules/vector2.js";
 import { CapturableMouseEvent, ScreenManager } from "modules/screenManager.js";
-import { canvas, ctx } from "modules/graphics.js";
-import { loadTexture } from "modules/assetManagement.js";
+import { canvas, ctx, Display } from "modules/graphics.js";
 
-export enum HorizontalAnchorPoint {
+export interface IUIParent {
+	children: UIElement[];
+}
+
+export function addChild<C extends UIElement>(parent: IUIParent, factory: (parent: IUIParent) => C): C {
+	const child = factory(parent);
+	parent.children.push(child);
+	return child;
+}
+
+/**
+ * The horizontal anchor point of a ui element
+ */
+export enum HAnchPoint {
     LEFT,
     MIDDLE,
     RIGHT,
 }
 
-export enum VerticalAnchorPoint {
+export namespace HAnchPoint {
+    export function getPos(anch: HAnchPoint, pos: number, size: number) {
+        switch (anch) {
+            case HAnchPoint.LEFT:
+                return pos - size / 2;
+            case HAnchPoint.MIDDLE:
+                return pos;
+            case HAnchPoint.RIGHT:
+                return pos + size / 2;
+        }
+    }
+}
+
+/**
+ * The vertical anchor point of an ui element
+ */
+export enum VAnchPoint {
     TOP,
     MIDDLE,
     BOTTOM,
 }
 
-export interface UIELementArgs {
-    horizontal: HorizontalAnchorPoint;
-    vertical: VerticalAnchorPoint;
+export namespace VAnchPoint {
+    export function getPos(anch: VAnchPoint, pos: number, size: number) {
+        switch (anch) {
+            case VAnchPoint.TOP:
+                return pos - size / 2;
+            case VAnchPoint.MIDDLE:
+                return pos;
+            case VAnchPoint.BOTTOM:
+                return pos + size / 2;
+        }
+    }
+}
+
+interface UIElementArgs {
+    parent: IUIParent;
+    parHorAnch: HAnchPoint;
+    parVerAnch: VAnchPoint;
+    horAnch: HAnchPoint;
+    verAnch: VAnchPoint;
     offset: Vec2;
     size: Vec2;
 }
-export abstract class UIElement {
-    horizontal: HorizontalAnchorPoint;
-    vertical: VerticalAnchorPoint;
-    offset: Vec2; //offset from anchor
+
+/**
+ * The UIElement is always positionted relative to its parent element.
+ */
+export abstract class UIElement implements IUIParent {
+    /** The element that this one is attached to. If it is null the element is attached to the canvas. */
+    parent: IUIParent;
+
+    /** Position of the anchor on the parent element in the horizontal axis */
+    parHorAnch: HAnchPoint;
+
+    /** Position of the anchor on the parent element in the vertical axis */
+    parVerAnch: VAnchPoint;
+
+    /** Position of the anchor on the current element in the horizontal axis */
+    horAnch: HAnchPoint;
+
+    /** Position of the anchor on the current element in the vertical axis */
+    verAnch: VAnchPoint;
+
+    /** Screen coordinate offset after other transformations */
+    offset: Vec2;
+
     size: Vec2;
 
-    constructor(args: UIELementArgs) {
-        this.horizontal = args.horizontal;
-        this.vertical = args.vertical;
-        this.offset = args.offset;
-        this.size = args.size;
+    /** The position cache computed from the current state */
+    computed: Vec2;
+
+	children: UIElement[] = [];
+
+    constructor({
+        parent,
+        parVerAnch,
+        parHorAnch,
+        verAnch,
+        horAnch,
+        offset,
+        size,
+    }: UIElementArgs) {
+        this.parent = parent;
+        this.parHorAnch = parHorAnch;
+        this.parVerAnch = parVerAnch;
+        this.horAnch = horAnch;
+        this.verAnch = verAnch;
+        this.offset = offset;
+        this.size = size;
+        this.computed = new Vec2(0, 0);
+		this.computePos();
     }
 
-    getAnchorVertical(): number {
-        switch (this.vertical) {
-            case VerticalAnchorPoint.TOP:
-                return 0;
-            case VerticalAnchorPoint.MIDDLE:
-                return canvas.height / 2;
-            case VerticalAnchorPoint.BOTTOM:
-                return canvas.height;
+    computePos() {
+        let parX;
+        let parY;
+        let parSizeX;
+        let parSizeY;
+
+        if (this.parent instanceof UIElement) {
+			const p = this.parent as UIElement;
+            parX = p.computed.x;
+            parY = p.computed.y;
+            parSizeX = p.size.x;
+            parSizeY = p.size.y;
+        } else {
+            parX = 0 + Display.width / 2;
+            parY = 0 + Display.height / 2;
+            parSizeX = Display.width;
+            parSizeY = Display.height;
         }
-    }
 
-    getAnchorHorizontal(): number {
-        switch (this.horizontal) {
-            case HorizontalAnchorPoint.LEFT:
-                return 0;
-            case HorizontalAnchorPoint.MIDDLE:
-                return canvas.width / 2;
-            case HorizontalAnchorPoint.RIGHT:
-                return canvas.width;
-        }
-    }
+        const parAnchX = HAnchPoint.getPos(this.parHorAnch, parX, parSizeX);
+        const parAnchY = VAnchPoint.getPos(this.parVerAnch, parY, parSizeY);
 
-    get centerX(): number {
-        return this.getAnchorHorizontal() + this.offset.x;
-    }
+        this.computed.x =
+            parAnchX -
+            HAnchPoint.getPos(this.horAnch, 0, this.size.x) +
+            this.offset.x;
+        this.computed.y =
+            parAnchY -
+            VAnchPoint.getPos(this.verAnch, 0, this.size.y) +
+            this.offset.y;
 
-    get centerY(): number {
-        return this.getAnchorVertical() + this.offset.y;
+		for(const child of this.children) {
+			child.computePos();
+		}
     }
 
     abstract draw(): void;
@@ -73,60 +160,49 @@ export abstract class UIElement {
 
     mouseDownEvent(_: CapturableMouseEvent) {}
 
-	mouseUpEvent(_: MouseEvent) {}
-
-    get boundRect() {
-        return new Rect(
-            this.centerX - this.size.x / 2,
-            this.centerY - this.size.y / 2,
-            this.size.x,
-            this.size.y,
-        );
-    }
+    mouseUpEvent(_: MouseEvent) {}
 }
 
-export interface UITextArgs extends UIELementArgs {
+interface UITextArgs extends UIElementArgs {
     text: string;
+	resizeForTxt: boolean;
 }
 
 export class UIText extends UIElement {
     text: string;
+	font: string;
     static new(args: UITextArgs): UIText {
         return new UIText(args);
     }
+
     constructor(args: UITextArgs) {
         super(args);
         this.text = args.text;
 
-        ctx.font = this.size.y.toString() + "px orbitron";
-        ctx.textBaseline = "bottom";
-        let textMetrics = ctx.measureText(this.text);
-        if (this.size.x < textMetrics.width) {
-            this.size.x = textMetrics.width + 20;
-        }
+		this.font = Math.floor(this.size.y).toString() + "px orbitron";
+		if(args.resizeForTxt) this.resizeForTxt();
     }
 
-    draw() {
-        ctx.font = this.size.y.toString() + "px orbitron";
-        ctx.fillStyle = "red";
-        ctx.textBaseline = "bottom";
-        let textMetrics = ctx.measureText(this.text);
-        let textHeight = textMetrics.emHeightAscent;
-        ctx.fillText(
-            this.text,
-            this.centerX - textMetrics.width / 2,
-            this.centerY + textHeight / 2,
-        );
+    draw(color?: string) {
+		ctx.font = this.font;
+		ctx.textBaseline = "middle";
+		ctx.textAlign = "center";
+		ctx.fillStyle = color || "red";
+		ctx.fillText(this.text, this.computed.x, this.computed.y, this.size.x);
     }
+
+	resizeForTxt() {
+		ctx.font = this.font;
+		const metrics = ctx.measureText(this.text);
+		this.size.x = metrics.width;
+	}
 }
 
-export interface UIButtonArgs extends UIELementArgs {
-    text: string;
+export interface UIButtonArgs extends UITextArgs {
     clickCallback: (e: MouseEvent) => void;
 }
 
-export class UIButton extends UIElement {
-    text: string;
+export class UIButton extends UIText {
     isHoveredOver: boolean = false;
     clickCallback: (e: MouseEvent) => void;
 
@@ -136,56 +212,42 @@ export class UIButton extends UIElement {
 
     constructor(args: UIButtonArgs) {
         super(args);
-        this.text = args.text;
         this.clickCallback = args.clickCallback;
-
-        ctx.font = this.size.y.toString() + "px orbitron";
-        ctx.textBaseline = "bottom";
-        let textMetrics = ctx.measureText(this.text);
-        if (this.size.x < textMetrics.width) {
-            this.size.x = textMetrics.width + 20;
-        }
     }
 
     draw() {
-        ctx.font = this.size.y.toString() + "px orbitron";
-        ctx.textBaseline = "bottom";
-        let textMetrics = ctx.measureText(this.text);
-        let textHeight = textMetrics.emHeightAscent;
-        ctx.fillStyle = this.isHoveredOver ? "white" : "red";
-        ctx.fillText(
-            this.text,
-            this.centerX - textMetrics.width / 2,
-            this.centerY + textHeight / 2,
-        );
+		super.draw(this.isHoveredOver? "white" : "red");
     }
 
     mouseMoveEvent(e: MouseEvent) {
-        let buttonRect = this.boundRect;
+		//TODO fix
+        let buttonRect = new Rect(this.computed.x - this.size.x / 2, this.computed.y - this.size.y / 2, this.size.x, this.size.y);
         let mousePos = new Vec2(e.clientX, e.clientY);
         if (this.isHoveredOver === false) {
             if (buttonRect.isPointInside(mousePos)) {
                 this.isHoveredOver = true;
-				ScreenManager.markForRedraw();
+                ScreenManager.markForRedraw();
             }
         } else {
             if (!buttonRect.isPointInside(mousePos)) {
                 this.isHoveredOver = false;
-				ScreenManager.markForRedraw();
+                ScreenManager.markForRedraw();
             }
         }
     }
 
     mouseDownEvent(e: CapturableMouseEvent) {
-        if (this.boundRect.isPointInside(new Vec2(e.clientX, e.clientY))) {
+		//TODO fix
+		const rect = new Rect(this.computed.x - this.size.x / 2, this.computed.y - this.size.y / 2, this.size.x, this.size.y);
+        if (rect.isPointInside(new Vec2(e.clientX, e.clientY))) {
             this.clickCallback(e);
+			CapturableMouseEvent.capture(e);
         }
     }
 }
 
 export interface UIIconButtonArgs extends UIButtonArgs {
     icon: HTMLOrSVGImageElement;
-	clickCallback: () => void;
 }
 
 export class UIIconButton extends UIButton {
@@ -195,14 +257,36 @@ export class UIIconButton extends UIButton {
         this.icon = args.icon;
     }
 
-    mouseDownEvent(e: CapturableMouseEvent) {
-        if (this.boundRect.isPointInside(new Vec2(e.clientX, e.clientY))) {
-			CapturableMouseEvent.capture(e);
-            this.clickCallback(e);
-        }
-    }
-
     draw(): void {
-        ctx.drawImage(this.icon, this.centerX - this.size.x / 2, this.centerY - this.size.y / 2, this.size.x, this.size.y);
+        ctx.drawImage(
+            this.icon,
+            this.computed.x - this.size.x / 2,
+            this.computed.y - this.size.y / 2,
+            this.size.x,
+            this.size.y,
+        );
     }
+}
+
+export interface UIScoreArgs extends UITextArgs {
+	getScore: () => string;
+}
+
+export class UIScore extends UIText{
+	getScore: () => string;
+	static new(args: UIScoreArgs) {
+		return new UIScore(args);
+	}
+	constructor(args: UIScoreArgs) {
+		super(args);
+		this.getScore = args.getScore;
+	}
+
+	draw(color?: string): void {
+		this.text = this.getScore();
+		this.resizeForTxt();
+		super.draw();
+	}
+
+
 }

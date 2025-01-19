@@ -3,7 +3,7 @@ import { Vec2 } from "modules/vector2.js";
 import { CollisionMap } from "modules/physics.js";
 import {
     Tower,
-	TowerType,
+    TowerType,
     Projectile,
     ProjectileType,
     Building,
@@ -38,12 +38,14 @@ export class Level {
     buildings = new EntityList<Building>();
     towers = new EntityList<Tower>();
     cm: CollisionMap;
-	spawnMan: SpawnMan = new SpawnMan();
+    spawnMan: SpawnMan = new SpawnMan();
+    //TODO refactor probably
+    money: number = 0;
 
     constructor(public desc: LevelDescriptor) {
         this.cm = new CollisionMap(desc.size.x, desc.size.y);
 
-		this.buildings.push(new Building(0, 0, true, BuildingType.HQ, 100));
+        this.buildings.push(new Building(0, 0, true, BuildingType.HQ, 100));
     }
 
     draw() {
@@ -58,9 +60,14 @@ export class Level {
         this.enemies.draw(this.view);
         this.projectiles.draw(this.view);
 
-		if(Game.selTowType !== null) {
-			Tower.drawBlueprint(this.view, this.view.viewToWorldX(Game.screen!.lastMouseX), this.view.viewToWorldY(Game.screen!.lastMouseY), Game.selTowType);
-		}
+        if (Game.selTowType !== null) {
+            Tower.drawBlueprint(
+                this.view,
+                this.view.viewToWorldX(Game.screen!.lastMouseX),
+                this.view.viewToWorldY(Game.screen!.lastMouseY),
+                Game.selTowType,
+            );
+        }
     }
 
     update() {
@@ -72,10 +79,10 @@ export class Level {
         this.enemies.addToCm(this.cm);
         this.projectiles.addToCm(this.cm);
 
-		this.buildings.doCollision();
-		this.towers.doCollision();
-		this.enemies.doCollision();
-		this.projectiles.doCollision();
+        this.buildings.doCollision();
+        this.towers.doCollision();
+        this.enemies.doCollision();
+        this.projectiles.doCollision();
 
         this.buildings.update();
         this.towers.update();
@@ -86,10 +93,11 @@ export class Level {
         this.towers.cull();
         this.enemies.cull();
         this.projectiles.cull();
-		
-		//spawning logic
-		this.spawnMan.update();
 
+        //spawning logic
+        this.spawnMan.update();
+
+        this.money += 1;
         this.frameCount += 1;
     }
 }

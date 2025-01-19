@@ -12,8 +12,6 @@ export class ScreenManager {
     static markedForRedraw = false;
 
 	//this symbol is a key for attaching a custom captured state to specific events
-	//TODO refactor this with a dedicated function and class
-	static eventCapturedSymbol = Symbol("eventCaptured");
 
     //screens
     static START_SCREEN: Screen;
@@ -31,7 +29,8 @@ export class ScreenManager {
             let clientRect = canvas.getClientRects()[0];
             canvas.width = clientRect.width;
             canvas.height = clientRect.height;
-            ScreenManager.activeScreen?.draw();
+			ScreenManager.activeScreen!.resizeEvent();
+            ScreenManager.activeScreen!.draw();
         });
 
 
@@ -63,6 +62,7 @@ export class ScreenManager {
     }
 
     static setActiveScreen(screen: Screen) {
+		screen.resizeEvent();
         this.activeScreen?.close();
         //cancelling old animation frame
         if (ScreenManager.lastAnimationFrame !== null) {
