@@ -24,14 +24,15 @@ In this game you are dropped on uncharted planets and are tasked with building a
   - transition landing screen planet selection -> planet (picture of base entering orbit)
   - sound with limited sounds at once
 
-  ## Notes
-  The screen class simply contains ui elements and manages any potential canvas renders.
-  It passes down events but can choose to process them.
+## Notes
+  ### UI
+      The screen class simply contains ui elements and manages any potential canvas renders.
+      It passes down events but can choose to process them.
 
-  The UI elements contain the following data:
-  optional "anchor element" this will be the reference point for the anchor positioning. If it is null the screen will be used.
-  "external anchor points x and y" where on the parent element the anchor will lie
-  "internal anchor points x and y" where on the current element the anchor will lie
-  "offset" screen space shift after other transformations
-  "size" size
+      The UI elements contain the following data:
+      optional "anchor element" this will be the reference point for the anchor positioning. If it is null the screen will be used.
+      "external anchor points x and y" where on the parent element the anchor will lie
+      "internal anchor points x and y" where on the current element the anchor will lie
+      "offset" screen space shift after other transformations
+      "size" size
   
