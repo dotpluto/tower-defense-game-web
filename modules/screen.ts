@@ -14,7 +14,7 @@ import { CapturableMouseEvent, ScreenManager } from "modules/screenManager.js";
 import { Game } from "modules/game.js";
 import { canvas, ctx } from "modules/graphics.js";
 import { loadTexture } from "modules/assetManagement.js";
-import { TowerType } from "modules/entity.js";
+import { BuildingType, TowerType } from "modules/entity.js";
 
 export abstract class Screen implements IUIParent {
     uiElements: UIElement[] = [];
@@ -175,7 +175,7 @@ export class GameScreen extends Screen {
 				icon: GameScreen.mgIcon,
 				size: new Vec2(50, 50),
                 clickCallback: () => {
-                    Game.selTowType = TowerType.MG;
+                    Game.selBuildingType = TowerType.MG;
                 },
 			});
 		});
@@ -194,11 +194,30 @@ export class GameScreen extends Screen {
 				icon: GameScreen.sniperIcon,
 				size: new Vec2(50, 50),
                 clickCallback: () => {
-                    Game.selTowType = TowerType.SNIPER;
+                    Game.selBuildingType = TowerType.SNIPER;
                 },
 			});
 		});
 		this.uiElements.push(secondButton);
+
+		const thirdButton = addChild(secondButton, (parent) => {
+			return new UIIconButton({
+				parent: parent,
+				parHorAnch: HAnchPoint.MIDDLE,
+				parVerAnch: VAnchPoint.BOTTOM,
+                horAnch: HAnchPoint.MIDDLE,
+                verAnch: VAnchPoint.TOP,
+				text: "",
+				resizeForTxt: false,
+				offset: new Vec2(0, 0),
+				icon: BuildingType.SOLAR_TEXT,
+				size: new Vec2(50, 50),
+                clickCallback: () => {
+                    Game.selBuildingType = BuildingType.SOLAR;
+                },
+			});
+		});
+		this.uiElements.push(thirdButton);
 
 		const score = addChild(this, (parent) => {
 			return new UIScore({

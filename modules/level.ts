@@ -24,12 +24,6 @@ export class LevelDescriptor {
     ) {}
 }
 
-class WaveProfile {
-    constructor() {}
-}
-
-class WaveModType {}
-
 export class Level {
     frameCount: number = 0;
     view: Viewport = new Viewport(new Vec2(0, 0));
@@ -39,13 +33,14 @@ export class Level {
     towers = new EntityList<Tower>();
     cm: CollisionMap;
     spawnMan: SpawnMan = new SpawnMan();
-    //TODO refactor probably
-    money: number = 0;
+	currency: Currency = new Currency({ metal: 50, energy: 50 });
+
 
     constructor(public desc: LevelDescriptor) {
         this.cm = new CollisionMap(desc.size.x, desc.size.y);
 
         this.buildings.push(new Building(0, 0, true, BuildingType.HQ, 100));
+		this.buildings.push(new Building(100, 100, true, BuildingType.SOLAR, 50));
     }
 
     draw() {
@@ -60,13 +55,20 @@ export class Level {
         this.enemies.draw(this.view);
         this.projectiles.draw(this.view);
 
-        if (Game.selTowType !== null) {
-            Tower.drawBlueprint(
-                this.view,
-                this.view.viewToWorldX(Game.screen!.lastMouseX),
-                this.view.viewToWorldY(Game.screen!.lastMouseY),
-                Game.selTowType,
-            );
+        if (Game.selBuildingType !== null) {
+			const worldX = this.view.viewToWorldX(Game.screen!.lastMouseX);
+			const worldY = this.view.viewToWorldY(Game.screen!.lastMouseY);
+
+			if(Game.selBuildingType instanceof TowerType) {
+				Tower.drawBlueprint(
+					this.view,
+					worldX,
+					worldY,
+					Game.selBuildingType,
+				);
+			} else {
+				this.view.fillRect(worldX - Game.selBuildingType.size.x / 2, worldY - Game.selBuildingType.size.y / 2, Game.selBuildingType.size.x, Game.selBuildingType.size.y, "green");
+			}
         }
     }
 
@@ -96,8 +98,29 @@ export class Level {
 
         //spawning logic
         this.spawnMan.update();
+		this.currency.update();
 
-        this.money += 1;
         this.frameCount += 1;
     }
+}
+
+export class Currency {
+	public metal: number;
+	public energy: number;
+
+	static metalBaseGain = 0.01;
+	static energyBaseGain = 0.1;
+
+	constructor({ metal, energy }: { metal: number, energy: number }) {
+		this.metal = metal;
+		this.energy = energy;
+	}
+
+	update() {
+		this.metal += Currency.metalBaseGain;
+		this.energy += Currency.energyBaseGain;
+	}
+
+	registerCurrencyProvider(build: Building) {
+	}
 }

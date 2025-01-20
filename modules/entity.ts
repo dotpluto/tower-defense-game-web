@@ -115,29 +115,49 @@ export abstract class Entity<T extends EntityType> {
     doCollisionResults(_: Entity<any>): void {}
 }
 
-interface BuildingTypeArgs extends EntityTypeArgs {}
+interface BuildingTypeArgs extends EntityTypeArgs {
+	cost: number;
+}
 
 export class BuildingType extends EntityType {
-    static HQ_TEX = loadTexture("hq.png");
+    static HQ_TEXT = loadTexture("hq.png");
+	static SOLAR_TEXT = loadTexture("solar_farm.png");
+
+	cost: number;
 
     static HQ = new BuildingType({
         size: new Vec2(40, 40),
         doCollision: true,
         hasHealth: true,
         maxHealth: 100,
+		cost: 0,
+    });
+
+    static SOLAR = new BuildingType({
+        size: new Vec2(50, 50),
+        doCollision: true,
+        hasHealth: true,
+        maxHealth: 100,
+		cost: 50,
     });
 
     constructor(args: BuildingTypeArgs) {
         super(args);
+		this.cost = args.cost;
     }
 
     draw(build: Building, view: Viewport) {
         switch (this) {
             case BuildingType.HQ:
-                view.drawImage(BuildingType.HQ_TEX, build.pos.x, build.pos.y);
+                view.drawImage(BuildingType.HQ_TEXT, build.pos.x, build.pos.y);
 				const healthSize = (build.health / this.maxHealth) * this.size.x;
-				view.fillRect(build.pos.x, build.pos.y + this.size.x + 1, healthSize, 2, "red");
+				view.fillRect(build.pos.x, build.pos.y + this.size.x + 1, healthSize, 5, "red");
                 break;
+			case BuildingType.SOLAR:
+				view.drawImage(BuildingType.SOLAR_TEXT, build.pos.x, build.pos.y);
+				const sHealthSize = (build.health / this.maxHealth) * this.size.x;
+				view.fillRect(build.pos.x, build.pos.y + this.size.x + 1, sHealthSize, 5, "red");
+				break;
             default:
                 throw new Error("Tried to draw a building that doesn't exist.");
         }
@@ -201,22 +221,22 @@ export class Building extends Entity<BuildingType> {
 		if(e instanceof Enemy) {
 			if(this.hurtCooldown <= 0) {
 				this.hurtCooldown = Building.hurtCooldownMax;
-				this.health -= 1;
+				if(this.health > 0) {
+					this.health -= 1;
+				}
 			}
 		}
 	}
 }
 
-interface TowerTypeArgs extends EntityTypeArgs {
+interface TowerTypeArgs extends BuildingTypeArgs {
     damage: number;
-    cost: number;
     shootCooldownMax: number;
     speed: number;
 }
 
 export class TowerType extends BuildingType {
     damage: number;
-    cost: number;
     shootCooldownMax: number;
     speed: number;
     static MG = new TowerType({
@@ -253,7 +273,6 @@ export class TowerType extends BuildingType {
     constructor(args: TowerTypeArgs) {
         super(args);
         this.damage = args.damage;
-        this.cost = args.cost;
         this.shootCooldownMax = args.shootCooldownMax;
         this.speed = args.speed;
     }

@@ -4,33 +4,37 @@ import { Vec2 } from "modules/vector2.js";
 import { LevelDescriptor, Level } from "modules/level.js";
 import { canvas } from "modules/graphics.js";
 import { GameScreen } from "modules/screen.js";
-import { Tower, TowerType } from "modules/entity.js";
+import { Building, BuildingType, Tower, TowerType } from "modules/entity.js";
 
 export class Game {
     static level: Level | null = null;
 	static screen: GameScreen | null = null;
-	static selTowType: TowerType | null = null;
+	static selBuildingType: BuildingType | null = null;
 
 	static placeTower() {
-		if(this.selTowType !== null && this.selTowType.cost <= Game.level!.money) {
+		if(this.selBuildingType !== null && this.selBuildingType.cost <= Game.level!.money) {
 			const centerX = this.level!.view.viewToWorldX(this.screen!.lastMouseX);
 			const centerY = this.level!.view.viewToWorldY(this.screen!.lastMouseY);
 
-			const topLeft = new Vec2(centerX - this.selTowType.size.x / 2, centerY - this.selTowType.size.y / 2);
+			const topLeft = new Vec2(centerX - this.selBuildingType.size.x / 2, centerY - this.selBuildingType.size.y / 2);
 
 			for(const build of this.level!.buildings) {
-				if(Vec2.doVectorSquaresIntersect(topLeft, this.selTowType.size, build.pos, build.eType.size)) {
+				if(Vec2.doVectorSquaresIntersect(topLeft, this.selBuildingType.size, build.pos, build.eType.size)) {
 					return;
 				}
 			}
 			for(const tow of this.level!.towers) {
-				if(Vec2.doVectorSquaresIntersect(topLeft, this.selTowType.size, tow.pos, tow.eType.size)) {
+				if(Vec2.doVectorSquaresIntersect(topLeft, this.selBuildingType.size, tow.pos, tow.eType.size)) {
 					return;
 				}
 			}
 
-			Tower.reuseOrCreate(this.level!, centerX, centerY, true, this.selTowType, 0);
-			Game.level!.money -= this.selTowType.cost;
+			if(this.selBuildingType instanceof TowerType) {
+				Tower.reuseOrCreate(this.level!, centerX, centerY, true, this.selBuildingType, 0);
+			} else {
+				Building.reuseOrCreate(this.level!, centerX, centerY, true, this.selBuildingType, this.selBuildingType.maxHealth);
+			}
+			Game.level!.money -= this.selBuildingType.cost;
 		}
 	}
 
