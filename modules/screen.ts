@@ -219,8 +219,9 @@ export class GameScreen extends Screen {
 		});
 		this.uiElements.push(thirdButton);
 
-		const score = addChild(this, (parent) => {
+		const energy = addChild(this, (parent) => {
 			return new UIScore({
+				color: "yellow",
 				parent: parent,
 				parHorAnch: HAnchPoint.MIDDLE,
 				parVerAnch: VAnchPoint.TOP,
@@ -228,14 +229,33 @@ export class GameScreen extends Screen {
                 verAnch: VAnchPoint.TOP,
 				text: "",
 				resizeForTxt: false,
-				offset: new Vec2(0, 0),
+				offset: new Vec2(-200, 0),
 				size: new Vec2(50, 50),
 				getScore() {
-				    return Game.level!.money.toString();
+					return Math.floor(Game.level!.currency.resourc.energy).toString();
 				},
 			});
 		});
-		this.uiElements.push(score);
+		this.uiElements.push(energy);
+
+		const nilrun = addChild(energy, (parent) => {
+			return new UIScore({
+				color: "green",
+				parent: parent,
+				parHorAnch: HAnchPoint.MIDDLE,
+				parVerAnch: VAnchPoint.MIDDLE,
+                horAnch: HAnchPoint.MIDDLE,
+                verAnch: VAnchPoint.MIDDLE,
+				text: "",
+				resizeForTxt: false,
+				offset: new Vec2(400, 0),
+				size: new Vec2(50, 50),
+				getScore() {
+					return Math.floor(Game.level!.currency.resourc.nilrun).toString();
+				},
+			});
+		});
+		this.uiElements.push(nilrun);
     }
 
     open() {

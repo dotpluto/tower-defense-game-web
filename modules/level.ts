@@ -15,6 +15,7 @@ import {
 import { Viewport, ctx, canvas } from "modules/graphics.js";
 import { SpawnMan } from "modules/spawnLogic.js";
 import { Game } from "modules/game.js";
+import { Currency } from "modules/currency.js";
 
 export class LevelDescriptor {
     constructor(
@@ -33,7 +34,7 @@ export class Level {
     towers = new EntityList<Tower>();
     cm: CollisionMap;
     spawnMan: SpawnMan = new SpawnMan();
-	currency: Currency = new Currency({ metal: 50, energy: 50 });
+	currency: Currency = new Currency({ nilrun: 100, energy: 100 });
 
 
     constructor(public desc: LevelDescriptor) {
@@ -102,25 +103,4 @@ export class Level {
 
         this.frameCount += 1;
     }
-}
-
-export class Currency {
-	public metal: number;
-	public energy: number;
-
-	static metalBaseGain = 0.01;
-	static energyBaseGain = 0.1;
-
-	constructor({ metal, energy }: { metal: number, energy: number }) {
-		this.metal = metal;
-		this.energy = energy;
-	}
-
-	update() {
-		this.metal += Currency.metalBaseGain;
-		this.energy += Currency.energyBaseGain;
-	}
-
-	registerCurrencyProvider(build: Building) {
-	}
 }

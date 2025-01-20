@@ -270,22 +270,25 @@ export class UIIconButton extends UIButton {
 
 export interface UIScoreArgs extends UITextArgs {
 	getScore: () => string;
+	color: string;
 }
 
 export class UIScore extends UIText{
 	getScore: () => string;
+	color: string;
 	static new(args: UIScoreArgs) {
 		return new UIScore(args);
 	}
 	constructor(args: UIScoreArgs) {
 		super(args);
 		this.getScore = args.getScore;
+		this.color = args.color;
 	}
 
 	draw(color?: string): void {
 		this.text = this.getScore();
 		this.resizeForTxt();
-		super.draw();
+		super.draw(this.color);
 	}
 
 

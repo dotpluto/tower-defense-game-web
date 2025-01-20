@@ -7,6 +7,7 @@ import { CollisionMap } from "modules/physics.js";
 import { Game } from "modules/game.js";
 import { Level } from "modules/level.js";
 import { fastDelete } from "modules/util.js";
+import { ICurrencyProvider, Resources } from "modules/currency.js";
 
 interface EntityTypeArgs {
     size: Vec2;
@@ -113,24 +114,30 @@ export abstract class Entity<T extends EntityType> {
     }
 
     doCollisionResults(_: Entity<any>): void {}
+
+	init() {};
+	cleanup() {};
 }
 
 interface BuildingTypeArgs extends EntityTypeArgs {
-	cost: number;
+	resourc: Resources;
+	provResourc?: Resources;
 }
 
 export class BuildingType extends EntityType {
     static HQ_TEXT = loadTexture("hq.png");
 	static SOLAR_TEXT = loadTexture("solar_farm.png");
 
-	cost: number;
+	resourc: Resources;
+	provResourc?: Resources;
 
     static HQ = new BuildingType({
         size: new Vec2(40, 40),
         doCollision: true,
         hasHealth: true,
         maxHealth: 100,
-		cost: 0,
+		resourc: new Resources({ nilrun: 50, energy: 50 }),
+		provResourc: new Resources ({}),
     });
 
     static SOLAR = new BuildingType({
@@ -138,12 +145,14 @@ export class BuildingType extends EntityType {
         doCollision: true,
         hasHealth: true,
         maxHealth: 100,
-		cost: 50,
+		resourc: new Resources({ nilrun: 50, energy: 10 }),
+		provResourc: new Resources({ energy: 0.01 })
     });
 
     constructor(args: BuildingTypeArgs) {
         super(args);
-		this.cost = args.cost;
+		this.resourc = args.resourc;
+		this.provResourc = args.provResourc;
     }
 
     draw(build: Building, view: Viewport) {
@@ -166,7 +175,7 @@ export class BuildingType extends EntityType {
     doCollisionResults() {}
 }
 
-export class Building extends Entity<BuildingType> {
+export class Building extends Entity<BuildingType> implements ICurrencyProvider {
 	static hurtCooldownMax = 10;
 	public hurtCooldown: number = 0;
 
@@ -178,12 +187,14 @@ export class Building extends Entity<BuildingType> {
         eType: BuildingType,
         health: number,
     ) {
-        const building = level.buildings.reviveEntityMustHandle();
+        let building = level.buildings.reviveEntityMustHandle();
         if (building !== undefined) {
             building.injectData(x, y, true, eType, 100);
         } else {
-            level.buildings.push(new Building(x, y, isCenter, eType, health));
+			building = new Building(x, y, isCenter, eType, health);
+            level.buildings.push(building);
         }
+		building.init();
     }
 
     public eType: BuildingType;
@@ -227,6 +238,14 @@ export class Building extends Entity<BuildingType> {
 			}
 		}
 	}
+
+	init(): void {
+	    Game.level!.currency.addCurProv(this);
+	}
+
+	getProv() {
+		return this.eType.provResourc!;
+	}
 }
 
 interface TowerTypeArgs extends BuildingTypeArgs {
@@ -244,30 +263,33 @@ export class TowerType extends BuildingType {
         hasHealth: false,
         maxHealth: 0,
         doCollision: false,
-        cost: 55,
+		resourc: new Resources({ nilrun: 50, energy: 100 }),
         shootCooldownMax: 20,
         damage: 2,
         speed: 8,
+		provResourc: new Resources({}),
     });
     static SNIPER = new TowerType({
         size: new Vec2(32, 32),
         hasHealth: false,
         maxHealth: 0,
         doCollision: false,
-        cost: 30,
+		resourc: new Resources({ nilrun: 50, energy: 100 }),
         shootCooldownMax: 30,
         damage: 8,
         speed: 8,
+		provResourc: new Resources({}),
     });
     static ROCKET = new TowerType({
         size: new Vec2(32, 32),
         hasHealth: false,
         maxHealth: 0,
         doCollision: false,
-        cost: 100,
+		resourc: new Resources({ nilrun: 100, energy: 150 }),
         shootCooldownMax: 20,
         damage: 16,
         speed: 8,
+		provResourc: new Resources({}),
     });
 
     constructor(args: TowerTypeArgs) {
@@ -275,6 +297,7 @@ export class TowerType extends BuildingType {
         this.damage = args.damage;
         this.shootCooldownMax = args.shootCooldownMax;
         this.speed = args.speed;
+		this.resourc = args.resourc;
     }
 }
 

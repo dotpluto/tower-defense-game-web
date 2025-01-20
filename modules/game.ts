@@ -5,6 +5,7 @@ import { LevelDescriptor, Level } from "modules/level.js";
 import { canvas } from "modules/graphics.js";
 import { GameScreen } from "modules/screen.js";
 import { Building, BuildingType, Tower, TowerType } from "modules/entity.js";
+import { passlog } from "modules/debug.js";
 
 export class Game {
     static level: Level | null = null;
@@ -12,7 +13,7 @@ export class Game {
 	static selBuildingType: BuildingType | null = null;
 
 	static placeTower() {
-		if(this.selBuildingType !== null && this.selBuildingType.cost <= Game.level!.money) {
+		if(this.selBuildingType !== null && Game.level!.currency.resourc.satisfies(this.selBuildingType.resourc)) {
 			const centerX = this.level!.view.viewToWorldX(this.screen!.lastMouseX);
 			const centerY = this.level!.view.viewToWorldY(this.screen!.lastMouseY);
 
@@ -34,7 +35,8 @@ export class Game {
 			} else {
 				Building.reuseOrCreate(this.level!, centerX, centerY, true, this.selBuildingType, this.selBuildingType.maxHealth);
 			}
-			Game.level!.money -= this.selBuildingType.cost;
+
+			Game.level!.currency.resourc.remove(this.selBuildingType.resourc);
 		}
 	}
 

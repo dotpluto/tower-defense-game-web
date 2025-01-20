@@ -48,3 +48,8 @@ export function typeAssert(value: any, type: string) {
 export function instanceAssert(value: any, type: Function) {
     if (!(value instanceof type)) throw new InstanceAssertionFailedError();
 }
+
+export function passlog<T>(message: string, value: T): T {
+	console.log(message, value);
+	return value;
+}
