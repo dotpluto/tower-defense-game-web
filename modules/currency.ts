@@ -7,7 +7,6 @@ export class Currency {
     }
 
     update() {
-		this.resourc.doBaseGain();
 		for(const curProvi of this.curProvs) {
 			this.resourc.add(curProvi.getProv());
 		}
@@ -49,15 +48,6 @@ export class Resources implements IResources {
         this.puritanium = args.puritanium || 0;
         this.vitrium = args.vitrium || 0;
         this.charite = args.charite || 0;
-    }
-
-    /**
-     * This function is for when using this container for the global resources.
-     * It contains base resource gain per frame.
-     */
-    doBaseGain() {
-        this.energy += 0.1;
-        this.nilrun += 0.1;
     }
 
     satisfies(toBeSatisfied: Resources) {

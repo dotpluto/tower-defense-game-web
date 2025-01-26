@@ -31,7 +31,7 @@ export class Game {
 			}
 
 			if(this.selBuildingType instanceof TowerType) {
-				Tower.reuseOrCreate(this.level!, centerX, centerY, true, this.selBuildingType, 0);
+				Tower.reuseOrCreate(this.level!, centerX, centerY, true, this.selBuildingType, this.selBuildingType.maxHealth);
 			} else {
 				Building.reuseOrCreate(this.level!, centerX, centerY, true, this.selBuildingType, this.selBuildingType.maxHealth);
 			}
