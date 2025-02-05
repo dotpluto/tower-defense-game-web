@@ -41,8 +41,8 @@ export class Game {
 	}
 
     static doFrame() {
-        Game.level!.draw();
         Game.level!.update();
+        Game.level!.draw();
     }
 
     static init() {
