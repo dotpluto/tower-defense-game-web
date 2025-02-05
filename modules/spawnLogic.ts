@@ -21,16 +21,16 @@ export class SpawnMan {
 		const building = this.getRandomBuilding(level);
 		Vec2.numRandomUnit();
 		Vec2.numScale(Vec2.numX, Vec2.numY, 800);
-		Enemy.reuseOrCreate(level, Vec2.numX, Vec2.numY, true, EnemyType.SMALL, 1);
+		level.enemies.reviveOrCreate().injectData(Vec2.numX, Vec2.numY, true, EnemyType.SMALL, EnemyType.SMALL.maxHealth);
 	}
 
 	getRandomBuilding(level: Level): Entity<any> {
-		const buildingCount = level.towers.length + level.buildings.length;
+		const buildingCount = level.towers.alive.length + level.buildings.alive.length;
 		const buildInd = Math.floor(buildingCount * Math.random());
-		if(buildInd < level.towers.length) {
-			return level.towers[buildInd];
+		if(buildInd < level.towers.alive.length) {
+			return level.towers.alive[buildInd];
 		} else {
-			return level.buildings[buildInd - level.towers.length];
+			return level.buildings.alive[buildInd - level.towers.alive.length];
 		}
 	}
 }

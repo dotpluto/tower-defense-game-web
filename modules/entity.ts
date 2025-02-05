@@ -6,7 +6,7 @@ import { loadTexture } from "modules/assetManagement.js";
 import { CollisionMap } from "modules/physics.js";
 import { Game } from "modules/game.js";
 import { Level } from "modules/level.js";
-import { fastDelete } from "modules/util.js";
+import { EffArray, fastDelete } from "modules/util.js";
 import { Currency, ICurrencyProvider, Resources } from "modules/currency.js";
 
 interface EntityTypeArgs {
@@ -15,8 +15,6 @@ interface EntityTypeArgs {
     hasHealth: boolean;
     maxHealth: number;
 }
-
-type hasDied = boolean;
 
 export abstract class EntityType {
     public size: Vec2;
@@ -121,6 +119,13 @@ export abstract class Entity<T extends EntityType> {
     init(_: Currency) {}
     cleanup() {}
     update() {}
+
+	/**
+	  * Create a empty husk ready for injection.
+	  */
+	static createDefault() {
+		throw new Error("Default static method wasn't overriden properly.");
+	}
 }
 
 interface BuildingTypeArgs extends EntityTypeArgs {
@@ -177,7 +182,6 @@ export class BuildingType extends EntityType {
     }
 
     draw(build: Building, view: Viewport) {
-		console.log(this);
         switch (this) {
             case BuildingType.HQ:
                 view.drawImage(BuildingType.HQ_TEXT, build.pos.x, build.pos.y);
@@ -194,6 +198,7 @@ export class BuildingType extends EntityType {
 			case BuildingType.MINE:
 				view.drawImage(BuildingType.MINE_TEXT_EMPTY, build.pos.x, build.pos.y);
 				build.drawHealth(view);
+				break;
             default:
                 throw new Error("Tried to draw a building that doesn't exist.");
         }
@@ -209,22 +214,8 @@ export class Building
     static hurtCooldownMax = 5;
     public hurtCooldown: number = 0;
 
-    static reuseOrCreate(
-        level: Level,
-        x: number,
-        y: number,
-        isCenter: boolean,
-        eType: BuildingType,
-        health: number,
-    ) {
-        let building = level.buildings.reviveEntityMustHandle();
-        if (building !== undefined) {
-            building.injectData(x, y, true, eType, 100);
-        } else {
-            building = new Building(x, y, isCenter, eType, health);
-            level.buildings.push(building);
-        }
-        building.init(level.currency);
+    static createDefault(): Building {
+            return new Building(0, 0, true, BuildingType.HQ, 0);
     }
 
     public eType: BuildingType;
@@ -352,20 +343,8 @@ export class TowerType extends BuildingType {
 }
 
 export class Tower extends Building {
-    static reuseOrCreate(
-        level: Level,
-        x: number,
-        y: number,
-        isCenter: boolean,
-        eType: TowerType,
-        health: number,
-    ) {
-        const tower = level.towers.reviveEntityMustHandle();
-        if (tower !== undefined) {
-            tower.injectData(x, y, true, eType, 100);
-        } else {
-            level.towers.push(new Tower(x, y, isCenter, eType, health));
-        }
+    static createDefault(): Tower {
+		return new Tower(0, 0, true, TowerType.MG, 0);
     }
 
     static drawBlueprint(
@@ -419,7 +398,7 @@ export class Tower extends Building {
 		this.drawHealth(view);
     }
 
-    update(): hasDied {
+    update() {
         this.findTarget();
 
         if (this.shootCooldown <= 0 && this.target !== null) {
@@ -428,8 +407,6 @@ export class Tower extends Building {
         } else {
             this.shootCooldown -= 1;
         }
-
-        return false;
     }
 
     shoot() {
@@ -449,15 +426,8 @@ export class Tower extends Building {
             this.eType === TowerType.MG
                 ? ProjectileType.BALL
                 : ProjectileType.ROCKET;
-        Projectile.reuseOrCreate(
-            Game.level!,
-            this.centX,
-            this.centY,
-            true,
-            type,
-            dirX,
-            dirY,
-        );
+
+		Game.level!.projectiles.reviveOrCreate().injectData(this.centX, this.centY, true, dirX, dirY, 1, type);
     }
 
     findTarget() {
@@ -504,23 +474,10 @@ export class ProjectileType extends EntityType {
 }
 
 export class Projectile extends Entity<ProjectileType> {
-    static reuseOrCreate(
-        level: Level,
-        x: number,
-        y: number,
-        isCenter: boolean,
-        eType: ProjectileType,
-        velX: number,
-        velY: number,
-    ) {
-        const entity = level.projectiles.reviveEntityMustHandle();
-        if (entity !== undefined) {
-            entity.injectData(x, y, isCenter, velX, velY, 1, eType);
-        } else {
-            level.projectiles.push(
-                new Projectile(x, y, isCenter, velX, velY, 1, eType),
-            );
-        }
+
+    static createDefault(): Projectile 
+	{
+                return new Projectile(0, 0, true, 0, 0, 0, ProjectileType.BALL);
     }
 
     public vel: Vec2 = new Vec2(0, 0);
@@ -623,20 +580,9 @@ export class Enemy extends Entity<EnemyType> {
 
     public eType: EnemyType;
 
-    static reuseOrCreate(
-        level: Level,
-        x: number,
-        y: number,
-        isCenter: boolean,
-        eType: EnemyType,
-        health: number,
-    ) {
-        const entity = level.enemies.reviveEntityMustHandle();
-        if (entity !== undefined) {
-            entity.injectData(x, y, true, EnemyType.SMALL, 1);
-        } else {
-            level.enemies.push(new Enemy(x, y, isCenter, eType, health));
-        }
+    static createDefault(): Enemy 
+    {
+        return new Enemy(0, 0, true, EnemyType.SMALL, 0);
     }
 
     static getDist(a: Entity<any>, b: Entity<any>) {
@@ -703,7 +649,7 @@ export class Enemy extends Entity<EnemyType> {
     }
 
     findTarget() {
-        const target = Game.level?.buildings[0] as Entity<any>;
+        const target = Game.level!.buildings.alive[0] as Entity<any>;
         if (target !== undefined) {
             this.target = target;
         }
@@ -751,60 +697,61 @@ export class Enemy extends Entity<EnemyType> {
 /*
  * Content is explicitly unordered!
  */
-export class EntityList<T extends Entity<any>> extends Array<T> {
-    public deadList: T[] = [];
+export class EntityList<T extends Entity<any>> {
+	public alive: EffArray<T> = new EffArray();
+	public dead: EffArray<T> = new EffArray();
+	public createDefault: () => T;
 
-    constructor() {
-        super();
-    }
+	constructor(constr: new (...args: any[]) => T) {
+		this.createDefault = (constr as any).createDefault;
+	}
 
-    //operate on content
+	reviveOrCreate(): T {
+		let entity = this.dead.pop();
+		if(entity === undefined) {
+			entity = this.createDefault();
+		}
+		entity.markDead = false;
+		this.alive.push(entity);
+		return entity;
+	}
+
     addToCm(cm: CollisionMap) {
-        this.forEach((entity) => {
+        this.alive.forEach((entity) => {
             cm.add(entity);
         });
     }
 
+    update() {
+        for (let i = 0; i < this.alive.length; i++) {
+            this.alive[i].update();
+        }
+    }
+
     draw(cam: Viewport) {
-        this.forEach((entity) => {
+        this.alive.forEach((entity) => {
             entity.draw(cam);
         });
     }
 
-    update() {
-        for (let i = 0; i < this.length; i++) {
-            this[i].update();
+    doCollision() {
+        for (const entity of this.alive) {
+            entity.checkForCollisions();
         }
     }
 
     cull() {
-        for (let i = 0; i < this.length; i++) {
-            const entity = this[i];
+        for (let i = 0; i < this.alive.length; i++) {
+            const entity = this.alive[i];
             if (entity.markDead) {
-                this.deadList.push(entity);
-                fastDelete(i, this);
+                this.dead.push(entity);
+                fastDelete(i, this.alive);
                 i -= 1;
             }
         }
     }
 
-    doCollision() {
-        for (const entity of this) {
-            entity.checkForCollisions();
-        }
-    }
-
-    //modify
-    reviveEntityMustHandle() {
-        const entity = this.deadList.pop();
-        if (entity !== undefined) {
-            entity.markDead = false;
-            this.push(entity);
-        }
-        return entity;
-    }
-
     getRandom(): T {
-        return this[Math.floor(Math.random() * this.length)];
+        return this.alive[Math.floor(Math.random() * this.alive.length)];
     }
 }

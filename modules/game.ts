@@ -19,21 +19,21 @@ export class Game {
 
 			const topLeft = new Vec2(centerX - this.selBuildingType.size.x / 2, centerY - this.selBuildingType.size.y / 2);
 
-			for(const build of this.level!.buildings) {
+			for(const build of this.level!.buildings.alive) {
 				if(Vec2.doVectorSquaresIntersect(topLeft, this.selBuildingType.size, build.pos, build.eType.size)) {
 					return;
 				}
 			}
-			for(const tow of this.level!.towers) {
+			for(const tow of this.level!.towers.alive) {
 				if(Vec2.doVectorSquaresIntersect(topLeft, this.selBuildingType.size, tow.pos, tow.eType.size)) {
 					return;
 				}
 			}
 
 			if(this.selBuildingType instanceof TowerType) {
-				Tower.reuseOrCreate(this.level!, centerX, centerY, true, this.selBuildingType, this.selBuildingType.maxHealth);
+				this.level!.towers.reviveOrCreate().injectData(centerX, centerY, true, this.selBuildingType, this.selBuildingType.maxHealth);
 			} else {
-				Building.reuseOrCreate(this.level!, centerX, centerY, true, this.selBuildingType, this.selBuildingType.maxHealth);
+				this.level!.buildings.reviveOrCreate().injectData(centerX, centerY, true, this.selBuildingType, this.selBuildingType.maxHealth);
 			}
 
 			Game.level!.currency.resourc.remove(this.selBuildingType.resourc);

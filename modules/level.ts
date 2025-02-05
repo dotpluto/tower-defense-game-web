@@ -28,10 +28,10 @@ export class LevelDescriptor {
 export class Level {
     frameCount: number = 0;
     view: Viewport = new Viewport(new Vec2(0, 0));
-    projectiles = new EntityList<Projectile>();
-    enemies = new EntityList<Enemy>();
-    buildings = new EntityList<Building>();
-    towers = new EntityList<Tower>();
+    projectiles = new EntityList<Projectile>(Projectile);
+    enemies = new EntityList<Enemy>(Enemy);
+    buildings = new EntityList<Building>(Building);
+    towers = new EntityList<Tower>(Tower);
     cm: CollisionMap;
     spawnMan: SpawnMan = new SpawnMan();
 	currency: Currency = new Currency({ nilrun: 100, energy: 100 });
@@ -39,9 +39,7 @@ export class Level {
 
     constructor(public desc: LevelDescriptor) {
         this.cm = new CollisionMap(desc.size.x, desc.size.y);
-		const hq = new Building(0, 0, true, BuildingType.HQ, BuildingType.HQ.maxHealth);
-		hq.init(this.currency);
-		this.buildings.push(hq);
+		this.buildings.reviveOrCreate().injectData(0, 0, true, BuildingType.HQ, BuildingType.HQ.maxHealth);
 
 		let nodeNum = 5;
 		const sizeX = desc.size.x - BuildingType.MINE.size.x;
@@ -50,8 +48,8 @@ export class Level {
 			const posX = Math.random() * sizeX;
 			const posY = Math.random() * sizeY;
 			let skip = false;
-			for (let index = 0; index < this.buildings.length; index++) {
-				const build = this.buildings[index];
+			for (let index = 0; index < this.buildings.alive.length; index++) {
+				const build = this.buildings.alive[index];
 				if(Vec2.doVectorSquaresIntersect(new Vec2(posX, posY), BuildingType.MINE.size, build.pos, build.eType.size)) {
 					skip = true;
 					break;
@@ -61,9 +59,7 @@ export class Level {
 				continue;
 			}
 
-			const node = new Building(posX, posX, true, BuildingType.MINE, BuildingType.MINE.maxHealth);
-			node.init(this.currency);
-			this.buildings.push(node);
+			this.buildings.reviveOrCreate().injectData(posX, posY, true, BuildingType.MINE, BuildingType.MINE.maxHealth);
 			nodeNum -= 1;
 		}
     }
