@@ -58,6 +58,7 @@ export abstract class Entity<T extends EntityType> {
     ) {
         this.setPos(x, y, isCenter, eType.size);
         this.health = health;
+		this.eType = eType;
     }
 
     setPos(x: number, y: number, isCenter: boolean, size: Vec2) {
@@ -129,9 +130,8 @@ export abstract class Entity<T extends EntityType> {
 }
 
 interface BuildingTypeArgs extends EntityTypeArgs {
-    resourc: Resources;
-    provResourc?: Resources;
-	autoProv: boolean;
+    cost: Resources;
+    generation: Resources;
 }
 
 export class BuildingType extends EntityType {
@@ -140,18 +140,16 @@ export class BuildingType extends EntityType {
 	static MINE_TEXT_EMPTY = loadTexture("quarry.png");
 	static MINE_TEXT_FULL = loadTexture("quarry_mining.png");
 
-    resourc: Resources;
-    provResourc?: Resources;
-	autoProv: boolean;
+    cost: Resources;
+    generation: Resources;
 
     static HQ = new BuildingType({
         size: new Vec2(40, 40),
         doCollision: true,
         hasHealth: true,
         maxHealth: 100,
-        resourc: new Resources({ nilrun: 50, energy: 50 }),
-        provResourc: new Resources({ nilrun: 0.01, energy: 0.01 }),
-		autoProv: true,
+        cost: new Resources({ }),
+        generation: new Resources({ nilrun: 0.01, energy: 0.01 }),
     });
 
     static SOLAR = new BuildingType({
@@ -159,9 +157,8 @@ export class BuildingType extends EntityType {
         doCollision: true,
         hasHealth: true,
         maxHealth: 100,
-        resourc: new Resources({ nilrun: 50, energy: 10 }),
-        provResourc: new Resources({ energy: 0.01 }),
-		autoProv: true,
+        cost: new Resources({  }),
+        generation: new Resources({ energy: 0.01 }),
     });
 
 	static MINE = new BuildingType({
@@ -169,39 +166,14 @@ export class BuildingType extends EntityType {
 		doCollision: true,
 		hasHealth: true,
 		maxHealth: 50,
-		resourc: new Resources({}),
-		provResourc: new Resources({ nilrun: 0.01 }),
-		autoProv: false,
+		cost: new Resources({}),
+		generation: new Resources({ nilrun: 0.01 }),
 	});
 
     constructor(args: BuildingTypeArgs) {
         super(args);
-        this.resourc = args.resourc;
-        this.provResourc = args.provResourc;
-		this.autoProv = args.autoProv;
-    }
-
-    draw(build: Building, view: Viewport) {
-        switch (this) {
-            case BuildingType.HQ:
-                view.drawImage(BuildingType.HQ_TEXT, build.pos.x, build.pos.y);
-				build.drawHealth(view);
-                break;
-            case BuildingType.SOLAR:
-                view.drawImage(
-                    BuildingType.SOLAR_TEXT,
-                    build.pos.x,
-                    build.pos.y,
-                );
-				build.drawHealth(view);
-                break;
-			case BuildingType.MINE:
-				view.drawImage(BuildingType.MINE_TEXT_EMPTY, build.pos.x, build.pos.y);
-				build.drawHealth(view);
-				break;
-            default:
-                throw new Error("Tried to draw a building that doesn't exist.");
-        }
+        this.cost = args.cost;
+        this.generation = args.generation;
     }
 
     doCollisionResults() {}
@@ -209,7 +181,6 @@ export class BuildingType extends EntityType {
 
 export class Building
     extends Entity<BuildingType>
-    implements ICurrencyProvider
 {
     static hurtCooldownMax = 5;
     public hurtCooldown: number = 0;
@@ -252,12 +223,38 @@ export class Building
         this.injectEntityData(x, y, isCenter, eType, health);
     }
 
-    draw(cam: Viewport) {
-        this.eType.draw(this, cam);
+    draw(view: Viewport) {
+        switch (this.eType) {
+            case BuildingType.SOLAR:
+                view.drawImage(
+                    BuildingType.SOLAR_TEXT,
+                    this.pos.x,
+                    this.pos.y,
+                );
+				this.drawHealth(view);
+                break;
+            case BuildingType.HQ:
+                view.drawImage(BuildingType.HQ_TEXT, this.pos.x, this.pos.y);
+				this.drawHealth(view);
+                break;
+			case BuildingType.MINE:
+				view.drawImage(BuildingType.MINE_TEXT_EMPTY, this.pos.x, this.pos.y);
+				this.drawHealth(view);
+				break;
+            default:
+                throw new Error("Tried to draw a building that doesn't exist.");
+        }
     }
 
     update(): void {
         this.hurtCooldown -= 1;
+		switch(this.eType) {
+			case BuildingType.MINE:
+				break;
+			default:
+				Game.level!.currency.resourc.add(this.eType.generation);
+				break;
+		}
     }
 
     doCollisionResults(e: Entity<any>): void {
@@ -269,20 +266,6 @@ export class Building
                 }
             }
         }
-    }
-
-	cleanup(): void {
-	    Game.level!.currency.remCurProv(this);
-	}
-
-    init(curr: Currency): void {
-		if(this.eType.autoProv) {
-			curr.addCurProv(this);
-		}
-    }
-
-    getProv() {
-        return this.eType.provResourc!;
     }
 }
 
@@ -301,36 +284,33 @@ export class TowerType extends BuildingType {
         hasHealth: true,
         maxHealth: 50,
         doCollision: true,
-        resourc: new Resources({ nilrun: 50, energy: 100 }),
+        cost: new Resources({}),
         shootCooldownMax: 20,
         damage: 2,
         speed: 8,
-        provResourc: new Resources({}),
-		autoProv: false,
+        generation: new Resources({}),
     });
     static SNIPER = new TowerType({
         size: new Vec2(32, 32),
         hasHealth: true,
         maxHealth: 50,
         doCollision: true,
-        resourc: new Resources({ nilrun: 50, energy: 100 }),
+        cost: new Resources({}),
         shootCooldownMax: 30,
         damage: 8,
         speed: 8,
-        provResourc: new Resources({}),
-		autoProv: false,
+        generation: new Resources({}),
     });
     static ROCKET = new TowerType({
         size: new Vec2(32, 32),
         hasHealth: true,
         maxHealth: 50,
         doCollision: true,
-        resourc: new Resources({ nilrun: 100, energy: 150 }),
+        cost: new Resources({}),
         shootCooldownMax: 20,
         damage: 16,
         speed: 8,
-        provResourc: new Resources({}),
-		autoProv: false,
+        generation: new Resources({}),
     });
 
     constructor(args: TowerTypeArgs) {
@@ -338,7 +318,7 @@ export class TowerType extends BuildingType {
         this.damage = args.damage;
         this.shootCooldownMax = args.shootCooldownMax;
         this.speed = args.speed;
-        this.resourc = args.resourc;
+        this.cost = args.cost;
     }
 }
 

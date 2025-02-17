@@ -13,7 +13,7 @@ export class Game {
 	static selBuildingType: BuildingType | null = null;
 
 	static placeTower() {
-		if(this.selBuildingType !== null && Game.level!.currency.resourc.satisfies(this.selBuildingType.resourc)) {
+		if(this.selBuildingType !== null && Game.level!.currency.resourc.satisfies(this.selBuildingType.cost)) {
 			const centerX = this.level!.view.viewToWorldX(this.screen!.lastMouseX);
 			const centerY = this.level!.view.viewToWorldY(this.screen!.lastMouseY);
 
@@ -36,7 +36,7 @@ export class Game {
 				this.level!.buildings.reviveOrCreate().injectData(centerX, centerY, true, this.selBuildingType, this.selBuildingType.maxHealth);
 			}
 
-			Game.level!.currency.resourc.remove(this.selBuildingType.resourc);
+			Game.level!.currency.resourc.remove(this.selBuildingType.cost);
 		}
 	}
 
