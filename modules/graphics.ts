@@ -22,6 +22,13 @@ export class Viewport {
         ctx.fillRect(this.worldToViewX(left), this.worldToViewY(top), w, h);
     }
 
+	drawCircleOutline(cLeft: number, cTop: number, radius: number, color: string) {
+		ctx.strokeStyle = color;
+		ctx.beginPath();
+		ctx.arc(this.worldToViewX(cLeft), this.worldToViewY(cTop), radius, 0, 2 * Math.PI);
+		ctx.stroke();
+	}
+
 	moveTo(x: number, y: number) {
 		ctx.moveTo(this.worldToViewX(x), this.worldToViewY(y));
 	}

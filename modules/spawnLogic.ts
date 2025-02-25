@@ -4,13 +4,13 @@ import { Vec2 } from "modules/vector2.js";
 import { Game } from "modules/game.js";
 
 export class SpawnMan {
-	static maxTimer: number = 10;
+	static maxTimer: number = 100;
 	public timer: number = 0;
 
 	update() {
 		if(this.timer <= 0) {
 			this.spawnEnemy();
-			this.timer = SpawnMan.maxTimer;
+			this.timer = SpawnMan.maxTimer - Game.level!.frameCount / 50;
 		} else {
 			this.timer -= 1;
 		}
@@ -26,7 +26,7 @@ export class SpawnMan {
 		switch (side) {
 			case 0: //top
 				x = this.getRandomWidthPos();
-				y = 0;
+				y = -Game.level!.desc.size.y / 2;
 				break;
 			case 1: //right
 				x = Game.level!.desc.size.x / 2;
@@ -37,7 +37,7 @@ export class SpawnMan {
 				y = Game.level!.desc.size.y / 2;
 				break;
 			case 3: //left
-				x = 0;
+				x = -Game.level!.desc.size.x / 2;
 				y = this.getRandomHeightPos();
 				break;
 		}

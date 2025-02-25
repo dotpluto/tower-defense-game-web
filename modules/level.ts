@@ -41,6 +41,7 @@ export class Level {
         this.cm = new CollisionMap(desc.size.x, desc.size.y);
 		this.buildings.reviveOrCreate().injectData(0, 0, true, BuildingType.HQ, BuildingType.HQ.maxHealth);
 
+		/*
 		let nodeNum = 5;
 		const sizeX = desc.size.x - BuildingType.MINE.size.x;
 		const sizeY = desc.size.y - BuildingType.MINE.size.y;
@@ -62,6 +63,7 @@ export class Level {
 			this.buildings.reviveOrCreate().injectData(posX, posY, true, BuildingType.MINE, BuildingType.MINE.maxHealth);
 			nodeNum -= 1;
 		}
+		*/
     }
 
     draw() {
@@ -90,6 +92,7 @@ export class Level {
 			} else {
 				this.view.fillRect(worldX - Game.selBuildingType.size.x / 2, worldY - Game.selBuildingType.size.y / 2, Game.selBuildingType.size.x, Game.selBuildingType.size.y, "green");
 			}
+
         }
     }
 

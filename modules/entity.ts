@@ -1,13 +1,13 @@
 "use strict";
 
-import { Viewport } from "modules/graphics.js";
+import { Viewport, ctx } from "modules/graphics.js";
 import { Vec2 } from "modules/vector2.js";
 import { loadTexture } from "modules/assetManagement.js";
 import { CollisionMap } from "modules/physics.js";
 import { Game } from "modules/game.js";
-import { Level } from "modules/level.js";
+import {} from "modules/level.js";
 import { EffArray, fastDelete } from "modules/util.js";
-import { Currency, ICurrencyProvider, Resources } from "modules/currency.js";
+import { Currency, Resources } from "modules/currency.js";
 
 interface EntityTypeArgs {
     size: Vec2;
@@ -31,6 +31,9 @@ export abstract class EntityType {
 }
 
 export abstract class Entity<T extends EntityType> {
+	/**
+	  * Wheter this entity should be culled in the next check.
+	  */
     public markDead = false;
     public pos: Vec2 = new Vec2(0, 0);
     public abstract eType: T;
@@ -108,16 +111,18 @@ export abstract class Entity<T extends EntityType> {
         );
     }
 
-	/** Mark as dead and do cleanup */
+	/** Mark as dead */
 	die() {
 		this.markDead = true;
-		this.cleanup();
 	}
 
 	// virtual functions
     draw(_: Viewport): void {}
     doCollisionResults(_: Entity<any>): void {}
     init(_: Currency) {}
+	/**
+	  * This should only be called by the cull function (or its successor)
+	  */
     cleanup() {}
     update() {}
 
@@ -126,6 +131,13 @@ export abstract class Entity<T extends EntityType> {
 	  */
 	static createDefault() {
 		throw new Error("Default static method wasn't overriden properly.");
+	}
+
+	distanceTo<T extends Entity<any>>(othEnt: T) {
+		const difX = this.centX - othEnt.centX;
+		const difY = this.centY - othEnt.centY;
+
+		return Vec2.numLength(difX, difY);
 	}
 }
 
@@ -144,7 +156,7 @@ export class BuildingType extends EntityType {
     generation: Resources;
 
     static HQ = new BuildingType({
-        size: new Vec2(40, 40),
+        size: new Vec2(10, 10),
         doCollision: true,
         hasHealth: true,
         maxHealth: 100,
@@ -153,16 +165,16 @@ export class BuildingType extends EntityType {
     });
 
     static SOLAR = new BuildingType({
-        size: new Vec2(50, 50),
+        size: new Vec2(20, 20),
         doCollision: true,
         hasHealth: true,
         maxHealth: 100,
-        cost: new Resources({  }),
+        cost: new Resources({ energy: 10, nilrun: 15 }),
         generation: new Resources({ energy: 0.01 }),
     });
 
 	static MINE = new BuildingType({
-		size: new Vec2(40, 40),
+		size: new Vec2(10, 10),
 		doCollision: true,
 		hasHealth: true,
 		maxHealth: 50,
@@ -203,14 +215,16 @@ export class Building
     }
 
     drawHealth(view: Viewport) {
-        const gapY = 5;
-        const offX = this.pos.x;
-        const offY = this.pos.y + this.eType.size.x + gapY;
-        const healthSize =
-            (this.health / this.eType.maxHealth) * this.eType.size.x;
-        const thickness = 5;
+		if(this.eType.hasHealth) {
+			const gapY = 4;
+			const thickness = 3;
 
-        view.fillRect(offX, offY, healthSize, thickness, "red");
+			const offX = this.pos.x;
+			const offY = this.pos.y + this.eType.size.x + gapY;
+			const healthSize = (this.health / this.eType.maxHealth) * this.eType.size.x;
+
+			view.fillRect(offX, offY, healthSize, thickness, "red");
+		}
     }
 
     injectData(
@@ -226,19 +240,15 @@ export class Building
     draw(view: Viewport) {
         switch (this.eType) {
             case BuildingType.SOLAR:
-                view.drawImage(
-                    BuildingType.SOLAR_TEXT,
-                    this.pos.x,
-                    this.pos.y,
-                );
+				view.fillRect(this.pos.x, this.pos.y, this.eType.size.x, this.eType.size.y, "blue");
 				this.drawHealth(view);
                 break;
             case BuildingType.HQ:
-                view.drawImage(BuildingType.HQ_TEXT, this.pos.x, this.pos.y);
+				view.fillRect(this.pos.x, this.pos.y, this.eType.size.x, this.eType.size.y, "yellow");
 				this.drawHealth(view);
                 break;
 			case BuildingType.MINE:
-				view.drawImage(BuildingType.MINE_TEXT_EMPTY, this.pos.x, this.pos.y);
+				view.fillRect(this.pos.x, this.pos.y, this.eType.size.x, this.eType.size.y, "grey");
 				this.drawHealth(view);
 				break;
             default:
@@ -273,44 +283,50 @@ interface TowerTypeArgs extends BuildingTypeArgs {
     damage: number;
     shootCooldownMax: number;
     speed: number;
+	range: number;
 }
 
 export class TowerType extends BuildingType {
     damage: number;
     shootCooldownMax: number;
     speed: number;
+	range: number;
+
     static MG = new TowerType({
-        size: new Vec2(48, 48),
+        size: new Vec2(15, 15),
         hasHealth: true,
         maxHealth: 50,
         doCollision: true,
-        cost: new Resources({}),
-        shootCooldownMax: 20,
+        cost: new Resources({ energy: 50, nilrun: 10 }),
+        shootCooldownMax: 5,
         damage: 2,
         speed: 8,
         generation: new Resources({}),
+		range: 150,
     });
     static SNIPER = new TowerType({
-        size: new Vec2(32, 32),
+        size: new Vec2(10, 10),
         hasHealth: true,
         maxHealth: 50,
         doCollision: true,
-        cost: new Resources({}),
+        cost: new Resources({ energy: 50, nilrun: 15 }),
         shootCooldownMax: 30,
-        damage: 8,
+        damage: 6,
         speed: 8,
         generation: new Resources({}),
+		range: 300,
     });
     static ROCKET = new TowerType({
-        size: new Vec2(32, 32),
+        size: new Vec2(10, 10),
         hasHealth: true,
         maxHealth: 50,
         doCollision: true,
-        cost: new Resources({}),
+        cost: new Resources({ energy: 50, nilrun: 10 }),
         shootCooldownMax: 20,
         damage: 16,
         speed: 8,
         generation: new Resources({}),
+		range: 350,
     });
 
     constructor(args: TowerTypeArgs) {
@@ -319,6 +335,7 @@ export class TowerType extends BuildingType {
         this.shootCooldownMax = args.shootCooldownMax;
         this.speed = args.speed;
         this.cost = args.cost;
+		this.range = args.range;
     }
 }
 
@@ -340,6 +357,7 @@ export class Tower extends Building {
             eType.size.y,
             "blue",
         );
+		view.drawCircleOutline(centX, centY, eType.range, "black");
     }
 
     public eType: TowerType;
@@ -368,6 +386,35 @@ export class Tower extends Building {
     }
 
     draw(view: Viewport) {
+		switch (this.eType) {
+			case TowerType.ROCKET:
+				view.fillRect(
+					this.pos.x,
+					this.pos.y,
+					this.eType.size.x,
+					this.eType.size.y,
+					"LightBlue",
+				);
+				break;
+			case TowerType.MG:
+				view.fillRect(
+					this.pos.x,
+					this.pos.y,
+					this.eType.size.x,
+					this.eType.size.y,
+					"Aquamarine",
+				);
+				break;
+			case TowerType.SNIPER:
+				view.fillRect(
+					this.pos.x,
+					this.pos.y,
+					this.eType.size.x,
+					this.eType.size.y,
+					"DarkBlue",
+				);
+				break;
+		}
         view.fillRect(
             this.pos.x,
             this.pos.y,
@@ -407,12 +454,12 @@ export class Tower extends Building {
                 ? ProjectileType.BALL
                 : ProjectileType.ROCKET;
 
-		Game.level!.projectiles.reviveOrCreate().injectData(this.centX, this.centY, true, dirX, dirY, 1, type);
+		Game.level!.projectiles.reviveOrCreate().injectData(this.centX, this.centY, true, dirX, dirY, this.eType.damage, type);
     }
 
     findTarget() {
         const potEnem = Game.level!.enemies.getRandom();
-        if (potEnem !== undefined) {
+        if (potEnem !== undefined && this.distanceTo(potEnem) <= this.eType.range) {
             if (this.target === null) {
                 potEnem.addShooter(this);
                 this.target = potEnem;
@@ -437,13 +484,13 @@ interface ProjectileTypeArgs extends EntityTypeArgs {}
 
 export class ProjectileType extends EntityType {
     static BALL = new ProjectileType({
-        size: new Vec2(25, 25),
+        size: new Vec2(5, 5),
         maxHealth: 0,
         hasHealth: false,
         doCollision: true,
     });
     static ROCKET = new ProjectileType({
-        size: new Vec2(16, 16),
+        size: new Vec2(5, 5),
         maxHealth: 0,
         hasHealth: false,
         doCollision: true,
@@ -457,7 +504,7 @@ export class Projectile extends Entity<ProjectileType> {
 
     static createDefault(): Projectile 
 	{
-                return new Projectile(0, 0, true, 0, 0, 0, ProjectileType.BALL);
+		return new Projectile(0, 0, true, 0, 0, 0, ProjectileType.BALL);
     }
 
     public vel: Vec2 = new Vec2(0, 0);
@@ -492,15 +539,34 @@ export class Projectile extends Entity<ProjectileType> {
         this.eType = eType;
     }
 
+	takeDamage() {
+		this.damage -= 1;
+		if(this.damage == 0) {
+			this.markDead = true;
+		}
+	}
+
     draw(view: Viewport) {
-        const color = this.eType === ProjectileType.BALL ? "orange" : "green";
-        view.fillRect(
-            this.pos.x,
-            this.pos.y,
-            this.eType.size.x,
-            this.eType.size.y,
-            color,
-        );
+		switch (this.eType) {
+			case ProjectileType.ROCKET:
+				view.fillRect(
+					this.pos.x,
+					this.pos.y,
+					this.eType.size.x,
+					this.eType.size.y,
+					"red",
+				);
+				break;
+			case ProjectileType.BALL:
+				view.fillRect(
+					this.pos.x,
+					this.pos.y,
+					this.eType.size.x,
+					this.eType.size.y,
+					"orange",
+				);
+				break;
+		}
     }
 
     update() {
@@ -529,7 +595,7 @@ interface EnemyTypeArgs extends EntityTypeArgs {
 }
 export class EnemyType extends EntityType {
     static SMALL = new EnemyType({
-        size: new Vec2(40, 40),
+        size: new Vec2(15, 15),
         doCollision: true,
         hasHealth: true,
         maxHealth: 10,
@@ -537,7 +603,7 @@ export class EnemyType extends EntityType {
         isArmored: false,
     });
     static BIG = new EnemyType({
-        size: new Vec2(16, 16),
+        size: new Vec2(25, 25),
         doCollision: true,
         hasHealth: true,
         maxHealth: 10,
@@ -572,7 +638,7 @@ export class Enemy extends Entity<EnemyType> {
     }
 
     target: Entity<any> | null = null;
-    lockedOnMe: Tower[] = [];
+    lockedOnMe: EffArray<Tower> = new EffArray<Tower>();
 
     constructor(
         x: number,
@@ -582,7 +648,6 @@ export class Enemy extends Entity<EnemyType> {
         health: number,
     ) {
         super(x, y, isCenter, eType, health);
-        this.lockedOnMe = [];
         this.eType = eType;
     }
 
@@ -595,7 +660,6 @@ export class Enemy extends Entity<EnemyType> {
     ) {
         this.injectEntityData(x, y, isCenter, eType, health);
         this.eType = eType;
-        this.lockedOnMe = [];
     }
 
     draw(cam: Viewport) {
@@ -655,12 +719,16 @@ export class Enemy extends Entity<EnemyType> {
         }
 
         //Delete array in a performant manner to avoid any infinte gc loops
-        (this.lockedOnMe as any) = null;
+		this.lockedOnMe.clear();
     }
 
     doCollisionResults(oEntity: Entity<any>): void {
         if (oEntity instanceof Projectile) {
-            this.markDead = true;
+			if(!this.markDead) {
+				Game.level!.currency.resourc.nilrun += 0.1;
+			}
+			this.markDead = true;
+			oEntity.takeDamage();
         } else if (oEntity instanceof Enemy) {
             let difX = oEntity.pos.x - this.pos.x;
             let difY = oEntity.pos.y - this.pos.y;
@@ -724,6 +792,7 @@ export class EntityList<T extends Entity<any>> {
         for (let i = 0; i < this.alive.length; i++) {
             const entity = this.alive[i];
             if (entity.markDead) {
+				entity.cleanup();
                 this.dead.push(entity);
                 fastDelete(i, this.alive);
                 i -= 1;
