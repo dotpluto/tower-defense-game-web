@@ -1,5 +1,12 @@
+#!/usr/bin/env bash
 #options
-shopt -s nullglob #if glob doesn't match anything return nothing
+shopt -s nullglob #if the glob doesn't match any files it should not return the glob
+
+which tsc >> /dev/null
+if [ $? != 0 ]; then
+    echo "The typescript compiler is not installed. Doing nothing."
+    exit
+fi
 
 #sourcing environment variables
 if [ -e ./.env ]; then
