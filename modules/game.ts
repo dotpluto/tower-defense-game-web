@@ -1,11 +1,11 @@
 "use strict";
 
-import { Vec2 } from "modules/vector2.js";
-import { LevelDescriptor, Level } from "modules/level.js";
-import { canvas } from "modules/graphics.js";
-import { GameScreen } from "modules/screen.js";
-import { Building, BuildingType, Tower, TowerType } from "modules/entity.js";
-import { passlog } from "modules/debug.js";
+import { Vec2 } from "./vector2.js";
+import { LevelDescriptor, Level } from "./level.js";
+import { canvas } from "./graphics.js";
+import { GameScreen } from "./screen.js";
+import { Building, BuildingType, Tower, TowerType } from "./entity.js";
+import { passlog } from "./debug.js";
 
 export class Game {
     static level: Level | null = null;

@@ -1,13 +1,13 @@
 "use strict";
 
-import { Viewport, ctx } from "modules/graphics.js";
-import { Vec2 } from "modules/vector2.js";
-import { loadTexture } from "modules/assetManagement.js";
-import { CollisionMap } from "modules/physics.js";
-import { Game } from "modules/game.js";
-import {} from "modules/level.js";
-import { EffArray, fastDelete } from "modules/util.js";
-import { Currency, Resources } from "modules/currency.js";
+import { Viewport, ctx } from "./graphics.js";
+import { Vec2 } from "./vector2.js";
+import { loadTexture } from "./assetManagement.js";
+import { CollisionMap } from "./physics.js";
+import { Game } from "./game.js";
+import {} from "./level.js";
+import { EffArray, fastDelete } from "./util.js";
+import { Currency, Resources } from "./currency.js";
 
 interface EntityTypeArgs {
     size: Vec2;

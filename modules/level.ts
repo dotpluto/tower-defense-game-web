@@ -1,6 +1,6 @@
-import { typeAssert, instanceAssert, assert } from "modules/debug.js";
-import { Vec2 } from "modules/vector2.js";
-import { CollisionMap } from "modules/physics.js";
+import { typeAssert, instanceAssert, assert } from "./debug.js";
+import { Vec2 } from "./vector2.js";
+import { CollisionMap } from "./physics.js";
 import {
     Tower,
     TowerType,
@@ -11,11 +11,11 @@ import {
     Enemy,
     EnemyType,
     EntityList,
-} from "modules/entity.js";
-import { Viewport, ctx, canvas } from "modules/graphics.js";
-import { SpawnMan } from "modules/spawnLogic.js";
-import { Game } from "modules/game.js";
-import { Currency } from "modules/currency.js";
+} from "./entity.js";
+import { Viewport, ctx, canvas } from "./graphics.js";
+import { SpawnMan } from "./spawnLogic.js";
+import { Game } from "./game.js";
+import { Currency } from "./currency.js";
 
 export class LevelDescriptor {
     constructor(

@@ -1,5 +1,5 @@
-import { Entity } from "modules/entity.js";
-import { ctx } from "modules/graphics.js";
+import { Entity } from "./entity.js";
+import { ctx } from "./graphics.js";
 import { Level } from "./level";
 
 //section count

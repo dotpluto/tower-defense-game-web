@@ -1,9 +1,9 @@
 "use strict";
 
-import { Rect } from "modules/rectangle.js";
-import { Vec2 } from "modules/vector2.js";
-import { CapturableMouseEvent, ScreenManager } from "modules/screenManager.js";
-import { canvas, ctx, Display } from "modules/graphics.js";
+import { Rect } from "./rectangle.js";
+import { Vec2 } from "./vector2.js";
+import { CapturableMouseEvent, ScreenManager } from "./screenManager.js";
+import { canvas, ctx, Display } from "./graphics.js";
 
 export interface IUIParent {
 	children: UIElement[];

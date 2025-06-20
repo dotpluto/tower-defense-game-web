@@ -1,7 +1,7 @@
 "use strict";
 
-import { Vec2 } from "modules/vector2.js";
-import { typeAssert } from "modules/debug.js";
+import { Vec2 } from "./vector2.js";
+import { typeAssert } from "./debug.js";
 
 export class Rect {
     constructor(

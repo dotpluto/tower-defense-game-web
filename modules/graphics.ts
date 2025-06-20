@@ -1,4 +1,4 @@
-import { Vec2 } from "modules/vector2.js";
+import { Vec2 } from "./vector2.js";
 
 export const canvas = document.getElementById("canvas") as HTMLCanvasElement;
 export const ctx = canvas.getContext("2d", {

@@ -27,9 +27,10 @@ if [ ! -d ${DEV_WEBROOT} ]; then
 fi
 
 #clean webroot
-cleanup_list=${DEV_WEBROOT}*
+cleanup_list=${DEV_WEBROOT}/*
 if [ -n ${cleanup_list:+"notempty"} ]; then
-	rm -r $cleanup_list
+	#rm -r $cleanup_list #deleting of old stuff temporarily disabled
+	test #nop because bash doesn't like empty if blocks
 fi
 
 #individual files
