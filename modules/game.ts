@@ -13,7 +13,7 @@ export class Game {
     static selBuildingType: BuildingType | null = null;
 
     static placeTower() {
-        if (this.selBuildingType !== null /*&& Game.level!.currency.resourc.satisfies(this.selBuildingType.cost)*/) {
+        if (this.selBuildingType !== null && Game.level!.currency.resourc.satisfies(this.selBuildingType.cost)) {
             const centerX = view.viewToWorldX(window.devicePixelRatio * this.screen!.lastMouseX);
             const centerY = view.viewToWorldY(window.devicePixelRatio * this.screen!.lastMouseY);
 
