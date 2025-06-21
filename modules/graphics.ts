@@ -5,37 +5,38 @@ export const ctx = canvas.getContext("2d", {
     alpha: true,
     antialias: false,
 }) as CanvasRenderingContext2D;
+ctx.imageSmoothingEnabled = false;
 
 /**
  * Class that represents a viewpoint.
  * It's size is equal to the size of the canvas.
  */
 export class Viewport {
-    constructor(public center: Vec2) {}
+    constructor(public center: Vec2) { }
 
     drawImage(img: HTMLOrSVGImageElement, left: number, top: number) {
-        ctx.drawImage(img, this.worldToViewX(left), this.worldToViewY(top));
+        ctx.drawImage(img, this.worldToViewX(left) + 0.5, this.worldToViewY(top) + 0.5);
     }
 
     fillRect(left: number, top: number, w: number, h: number, color: string) {
         ctx.fillStyle = color;
-        ctx.fillRect(this.worldToViewX(left), this.worldToViewY(top), w, h);
+        ctx.fillRect(this.worldToViewX(left) + 0.5, this.worldToViewY(top) + 0.5, w, h);
     }
 
-	drawCircleOutline(cLeft: number, cTop: number, radius: number, color: string) {
-		ctx.strokeStyle = color;
-		ctx.beginPath();
-		ctx.arc(this.worldToViewX(cLeft), this.worldToViewY(cTop), radius, 0, 2 * Math.PI);
-		ctx.stroke();
-	}
+    drawCircleOutline(cLeft: number, cTop: number, radius: number, color: string) {
+        ctx.strokeStyle = color;
+        ctx.beginPath();
+        ctx.arc(this.worldToViewX(cLeft) + 0.5, this.worldToViewY(cTop) + 0.5, radius, 0, 2 * Math.PI);
+        ctx.stroke();
+    }
 
-	moveTo(x: number, y: number) {
-		ctx.moveTo(this.worldToViewX(x), this.worldToViewY(y));
-	}
+    moveTo(x: number, y: number) {
+        ctx.moveTo(this.worldToViewX(x) + 0.5, this.worldToViewY(y) + 0.5);
+    }
 
-	lineTo(x: number, y: number) {
-		ctx.lineTo(this.worldToViewX(x), this.worldToViewY(y));
-	}
+    lineTo(x: number, y: number) {
+        ctx.lineTo(this.worldToViewX(x) + 0.5, this.worldToViewY(y) + 0.5);
+    }
 
 
     worldToViewX(worldX: number) {
@@ -46,29 +47,29 @@ export class Viewport {
         return worldY + this.height / 2 - this.center.y;
     }
 
-	viewToWorldX(viewX: number) {
-		return viewX - this.width / 2 + this.center.x;
-	}
+    viewToWorldX(viewX: number) {
+        return viewX - this.width / 2 + this.center.x;
+    }
 
-	viewToWorldY(viewY: number) {
-		return viewY - this.height / 2 + this.center.y;
-	}
+    viewToWorldY(viewY: number) {
+        return viewY - this.height / 2 + this.center.y;
+    }
 
     get width() {
-		return Display.width;
+        return Display.width;
     }
 
     get height() {
-		return Display.height;
+        return Display.height;
     }
 }
 
 export class Display {
-	static get width() {
-		return canvas.width;
-	}
+    static get width() {
+        return canvas.width;
+    }
 
-	static get height() {
-		return canvas.height;
-	}
+    static get height() {
+        return canvas.height;
+    }
 }
