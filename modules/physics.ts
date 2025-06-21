@@ -1,5 +1,5 @@
 import { Entity } from "./entity.js";
-import { ctx } from "./graphics.js";
+import { ctx, view } from "./graphics.js";
 import { Level } from "./level";
 
 //section count
@@ -143,8 +143,6 @@ export class CollisionMap {
     }
 
     debugDraw(level: Level) {
-        const view = level.view;
-
         //make chunks with things in it colored
         for (let chunkX = 0; chunkX < this.chNumX; chunkX++) {
             for (let chunkY = 0; chunkY < this.chNumY; chunkY++) {

@@ -7,35 +7,50 @@ export const ctx = canvas.getContext("2d", {
 }) as CanvasRenderingContext2D;
 ctx.imageSmoothingEnabled = false;
 
+
 /**
  * Class that represents a viewpoint.
  * It's size is equal to the size of the canvas.
  */
 export class Viewport {
-    constructor(public center: Vec2) { }
+    constructor(public center: Vec2) {}
 
     drawImage(img: HTMLOrSVGImageElement, left: number, top: number) {
-        ctx.drawImage(img, this.worldToViewX(left) + 0.5, this.worldToViewY(top) + 0.5);
+        ctx.drawImage(img, Math.floor(this.worldToViewX(left)), Math.floor(this.worldToViewY(top)));
+    }
+
+    drawImageCropped(img: HTMLOrSVGImageElement, width: number, height: number, x: number, y: number, offX: number, offY: number) {
+	ctx.drawImage(img, offX, offY, width, height, Math.floor(this.worldToViewX(x)), Math.floor(this.worldToViewY(y)), width, height);
     }
 
     fillRect(left: number, top: number, w: number, h: number, color: string) {
         ctx.fillStyle = color;
-        ctx.fillRect(this.worldToViewX(left) + 0.5, this.worldToViewY(top) + 0.5, w, h);
+        ctx.fillRect(Math.floor(this.worldToViewX(left)), Math.floor(this.worldToViewY(top)), w, h);
+    }
+
+    fillText(text: string, x: number, y: number, color: string, maxWidth:number|undefined) {
+	ctx.fillStyle = color;
+	ctx.fillText(text, Math.floor(this.worldToViewX(x)), Math.floor(this.worldToViewY(y)), maxWidth);
     }
 
     drawCircleOutline(cLeft: number, cTop: number, radius: number, color: string) {
         ctx.strokeStyle = color;
         ctx.beginPath();
-        ctx.arc(this.worldToViewX(cLeft) + 0.5, this.worldToViewY(cTop) + 0.5, radius, 0, 2 * Math.PI);
+        ctx.arc(Math.floor(this.worldToViewX(cLeft)), Math.floor(this.worldToViewY(cTop)), radius, 0, 2 * Math.PI);
         ctx.stroke();
     }
 
     moveTo(x: number, y: number) {
-        ctx.moveTo(this.worldToViewX(x) + 0.5, this.worldToViewY(y) + 0.5);
+        ctx.moveTo( Math.floor(this.worldToViewX(x)), Math.floor(this.worldToViewY(y)));
     }
 
     lineTo(x: number, y: number) {
-        ctx.lineTo(this.worldToViewX(x) + 0.5, this.worldToViewY(y) + 0.5);
+        ctx.lineTo( Math.floor(this.worldToViewX(x)), Math.floor(this.worldToViewY(y)));
+    }
+
+    drawPoint(x: number, y: number) {
+	ctx.fillStyle = "white";
+	ctx.fillRect( Math.floor(this.worldToViewX(x)), Math.floor(this.worldToViewY(y)), 1, 1);
     }
 
 
@@ -56,20 +71,12 @@ export class Viewport {
     }
 
     get width() {
-        return Display.width;
-    }
-
-    get height() {
-        return Display.height;
-    }
-}
-
-export class Display {
-    static get width() {
         return canvas.width;
     }
 
-    static get height() {
+    get height() {
         return canvas.height;
     }
 }
+
+export const view: Viewport = new Viewport(new Vec2(0, 0));

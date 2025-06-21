@@ -12,7 +12,7 @@ import {
     EnemyType,
     EntityList,
 } from "./entity.js";
-import { Viewport, ctx, canvas } from "./graphics.js";
+import { view, ctx, canvas } from "./graphics.js";
 import { SpawnMan } from "./spawnLogic.js";
 import { Game } from "./game.js";
 import { Currency } from "./currency.js";
@@ -27,7 +27,6 @@ export class LevelDescriptor {
 
 export class Level {
     frameCount: number = 0;
-    view: Viewport = new Viewport(new Vec2(0, 0));
     projectiles = new EntityList<Projectile>(Projectile);
     enemies = new EntityList<Enemy>(Enemy);
     buildings = new EntityList<Building>(Building);
@@ -73,24 +72,24 @@ export class Level {
         //this.cm.debugDraw(this);
 
         //updating
-        this.buildings.draw(this.view);
-        this.towers.draw(this.view);
-        this.enemies.draw(this.view);
-        this.projectiles.draw(this.view);
+        this.buildings.draw(view);
+        this.towers.draw(view);
+        this.enemies.draw(view);
+        this.projectiles.draw(view);
 
         if (Game.selBuildingType !== null) {
-			const worldX = this.view.viewToWorldX(Game.screen!.lastMouseX);
-			const worldY = this.view.viewToWorldY(Game.screen!.lastMouseY);
+			const worldX = view.viewToWorldX(Game.screen!.lastMouseX * window.devicePixelRatio);
+			const worldY = view.viewToWorldY(Game.screen!.lastMouseY * window.devicePixelRatio);
 
 			if(Game.selBuildingType instanceof TowerType) {
 				Tower.drawBlueprint(
-					this.view,
+					view,
 					worldX,
 					worldY,
 					Game.selBuildingType,
 				);
 			} else {
-				this.view.fillRect(worldX - Game.selBuildingType.size.x / 2, worldY - Game.selBuildingType.size.y / 2, Game.selBuildingType.size.x, Game.selBuildingType.size.y, "green");
+				view.fillRect(worldX - Game.selBuildingType.size.x / 2, worldY - Game.selBuildingType.size.y / 2, Game.selBuildingType.size.x, Game.selBuildingType.size.y, "green");
 			}
 
         }

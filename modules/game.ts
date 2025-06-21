@@ -2,7 +2,7 @@
 
 import { Vec2 } from "./vector2.js";
 import { LevelDescriptor, Level } from "./level.js";
-import { canvas } from "./graphics.js";
+import { canvas, view } from "./graphics.js";
 import { GameScreen } from "./screen.js";
 import { Building, BuildingType, Tower, TowerType } from "./entity.js";
 import { passlog } from "./debug.js";
@@ -13,9 +13,9 @@ export class Game {
     static selBuildingType: BuildingType | null = null;
 
     static placeTower() {
-        if (this.selBuildingType !== null && Game.level!.currency.resourc.satisfies(this.selBuildingType.cost)) {
-            const centerX = this.level!.view.viewToWorldX(this.screen!.lastMouseX);
-            const centerY = this.level!.view.viewToWorldY(this.screen!.lastMouseY);
+        if (this.selBuildingType !== null /*&& Game.level!.currency.resourc.satisfies(this.selBuildingType.cost)*/) {
+            const centerX = view.viewToWorldX(window.devicePixelRatio * this.screen!.lastMouseX);
+            const centerY = view.viewToWorldY(window.devicePixelRatio * this.screen!.lastMouseY);
 
             const topLeft = new Vec2(centerX - this.selBuildingType.size.x / 2, centerY - this.selBuildingType.size.y / 2);
 
@@ -62,8 +62,8 @@ export class Game {
 
     static moveView(x: number, y: number) {
         if (Game.level !== null) {
-            Game.level.view.center.x -= x;
-            Game.level.view.center.y -= y;
+            view.center.x -= x;
+	    view.center.y -= y;
         }
     }
 }

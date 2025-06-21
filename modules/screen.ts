@@ -1,110 +1,93 @@
 import {
+    /* 
     UIText,
     HAnchPoint,
-    VAnchPoint,
+    VerticalAnchor,
     UIButton,
     UIElement,
     UIIconButton,
     addChild,
-    IUIParent,
     UIScore,
+    */
+    UIRect,
+    UIElement,
+    IUIParent,
+    Anchor,
+    getAnchorOffsetHelper,
+    VerticalAnchor,
+    HorizontalAnchor,
+    UIText,
+    UIButton,
 } from "./uiElement.js";
 import { Vec2 } from "./vector2.js";
 import { CapturableMouseEvent, ScreenManager } from "./screenManager.js";
 import { Game } from "./game.js";
-import { canvas, ctx } from "./graphics.js";
+import { canvas, ctx, Viewport, view } from "./graphics.js";
 import { loadTexture } from "./assetManagement.js";
 import { BuildingType, TowerType } from "./entity.js";
 
-export abstract class Screen implements IUIParent {
-    uiElements: UIElement[] = [];
-    children: UIElement[] = [];
-    constructor(public liveRendering: boolean) {}
+export abstract class Screen extends IUIParent {
+    constructor(public liveRendering: boolean) {
+        super();
+    }
 
-    draw() {
-        this.uiElements.forEach((e) => {
-            e.draw();
+    draw(view: Viewport) {
+        this.children.forEach((e) => {
+            e.draw(view);
         });
     }
 
-    open() {}
-    close() {}
+    open(_: Viewport) { }
+    close() { }
 
     //event passdowns
     mouseMoveEvent(event: MouseEvent) {
-        for (const elem of this.uiElements) {
+        for (const elem of this.children) {
             elem.mouseMoveEvent(event);
         }
     }
 
     mouseUpEvent(event: MouseEvent) {
-        for (const elem of this.uiElements) {
+        for (const elem of this.children) {
             elem.mouseUpEvent(event);
         }
     }
 
     mouseDownEvent(event: CapturableMouseEvent) {
-        for (const elem of this.uiElements) {
+        for (const elem of this.children) {
             elem.mouseDownEvent(event);
         }
     }
 
     mouseLeaveEvent(event: MouseEvent) {
-	}
+    }
 
-	resizeEvent() {
-		for (const elem of this.children) {
-			elem.computePos();
-		}
-	}
+    resizeEvent() {
+        for (const elem of this.children) {
+            elem.compute();
+        }
+    }
+
+    getAnchorPoint(anchor: Anchor): Vec2 {
+        return getAnchorOffsetHelper(anchor, new Vec2(0, 0), new Vec2(canvas.width, canvas.height));
+    }
 
 }
 
 export class StartScreen extends Screen {
     constructor() {
         super(false);
-        const particlesText = addChild(this, (parent) => {
-            return UIText.new({
-                parent: parent, //display
-                parHorAnch: HAnchPoint.MIDDLE,
-                parVerAnch: VAnchPoint.MIDDLE,
-                horAnch: HAnchPoint.MIDDLE,
-                verAnch: VAnchPoint.MIDDLE,
-                offset: new Vec2(0, 0),
-                size: new Vec2(300, 96),
-                text: "Particles",
-				resizeForTxt: true,
-            });
-        });
-        this.uiElements.push(particlesText);
-
-        const playButton = addChild(particlesText, (parent) => {
-            return UIButton.new({
-                parent: parent,
-                parHorAnch: HAnchPoint.MIDDLE,
-                parVerAnch: VAnchPoint.BOTTOM,
-                horAnch: HAnchPoint.MIDDLE,
-                verAnch: VAnchPoint.TOP,
-                text: "Play",
-				resizeForTxt: true,
-                offset: new Vec2(0, 0),
-                size: new Vec2(100, 64),
-                clickCallback: () => {
-                    ScreenManager.setActiveScreen(ScreenManager.GAME_SCREEN);
-                },
-            })
-        });
-		this.uiElements.push(playButton);
+        this.appendChild(new UIButton(new Anchor(VerticalAnchor.MIDDLE, HorizontalAnchor.MIDDLE), new Anchor(VerticalAnchor.MIDDLE, HorizontalAnchor.MIDDLE), new Vec2(100, 120), "Play", () => { ScreenManager.setActiveScreen(ScreenManager.GAME_SCREEN) }, "Red", new Vec2(0, 0)));
     }
 
-    draw() {
-        ctx.fillStyle = "rgb(0, 0, 0)";
+    draw(view: Viewport) {
+        ctx.fillStyle = "Black";
         ctx.fillRect(0, 0, canvas.width, canvas.height);
-        super.draw();
+        super.draw(view);
     }
 
-    open() {
-        this.draw();
+    open(view: Viewport) {
+        this.draw(view);
     }
 }
 
@@ -112,7 +95,7 @@ export class EndScreen extends Screen {
     constructor() {
         super(false);
         /*
-        this.uiElements.push(
+        this.children.push(
             UIText.new({
                 vertical: VAnchPoint.MIDDLE,
                 horizontal: HAnchPoint.MIDDLE,
@@ -121,7 +104,7 @@ export class EndScreen extends Screen {
                 text: "Game Over",
             }),
         );
-        this.uiElements.push(
+        this.children.push(
             UIButton.new({
                 vertical: VAnchPoint.MIDDLE,
                 horizontal: HAnchPoint.MIDDLE,
@@ -133,16 +116,16 @@ export class EndScreen extends Screen {
                 },
             }),
         );
-		*/
+        */
     }
 
-    draw() {
+    draw(view: Viewport) {
         ctx.fillStyle = "black";
         ctx.fillRect(0, 0, canvas.width, canvas.height);
-        super.draw();
+        super.draw(view);
     }
-    open() {
-        this.draw();
+    open(view: Viewport) {
+        this.draw(view);
     }
 }
 
@@ -162,109 +145,19 @@ export class GameScreen extends Screen {
         super(true);
         Game.screen = this;
 
-		const firstButton = addChild(this, (parent) => {
-			return new UIIconButton({
-				parent: parent,
-				parHorAnch: HAnchPoint.LEFT,
-				parVerAnch: VAnchPoint.MIDDLE,
-                horAnch: HAnchPoint.LEFT,
-                verAnch: VAnchPoint.MIDDLE,
-				text: "",
-				resizeForTxt: false,
-				offset: new Vec2(0, 0),
-				icon: GameScreen.mgIcon,
-				size: new Vec2(50, 50),
-                clickCallback: () => {
-                    Game.selBuildingType = TowerType.MG;
-                },
-			});
-		});
-		this.uiElements.push(firstButton);
-
-		const secondButton = addChild(firstButton, (parent) => {
-			return new UIIconButton({
-				parent: parent,
-				parHorAnch: HAnchPoint.MIDDLE,
-				parVerAnch: VAnchPoint.BOTTOM,
-                horAnch: HAnchPoint.MIDDLE,
-                verAnch: VAnchPoint.TOP,
-				text: "",
-				resizeForTxt: false,
-				offset: new Vec2(0, 0),
-				icon: GameScreen.sniperIcon,
-				size: new Vec2(50, 50),
-                clickCallback: () => {
-                    Game.selBuildingType = TowerType.SNIPER;
-                },
-			});
-		});
-		this.uiElements.push(secondButton);
-
-		const thirdButton = addChild(secondButton, (parent) => {
-			return new UIIconButton({
-				parent: parent,
-				parHorAnch: HAnchPoint.MIDDLE,
-				parVerAnch: VAnchPoint.BOTTOM,
-                horAnch: HAnchPoint.MIDDLE,
-                verAnch: VAnchPoint.TOP,
-				text: "",
-				resizeForTxt: false,
-				offset: new Vec2(0, 0),
-				icon: BuildingType.SOLAR_TEXT,
-				size: new Vec2(50, 50),
-                clickCallback: () => {
-                    Game.selBuildingType = BuildingType.SOLAR;
-                },
-			});
-		});
-		this.uiElements.push(thirdButton);
-
-		const energy = addChild(this, (parent) => {
-			return new UIScore({
-				color: "yellow",
-				parent: parent,
-				parHorAnch: HAnchPoint.MIDDLE,
-				parVerAnch: VAnchPoint.TOP,
-                horAnch: HAnchPoint.MIDDLE,
-                verAnch: VAnchPoint.TOP,
-				text: "",
-				resizeForTxt: false,
-				offset: new Vec2(-200, 0),
-				size: new Vec2(50, 50),
-				getScore() {
-					return Math.floor(Game.level!.currency.resourc.energy).toString();
-				},
-			});
-		});
-		this.uiElements.push(energy);
-
-		const nilrun = addChild(energy, (parent) => {
-			return new UIScore({
-				color: "green",
-				parent: parent,
-				parHorAnch: HAnchPoint.MIDDLE,
-				parVerAnch: VAnchPoint.MIDDLE,
-                horAnch: HAnchPoint.MIDDLE,
-                verAnch: VAnchPoint.MIDDLE,
-				text: "",
-				resizeForTxt: false,
-				offset: new Vec2(400, 0),
-				size: new Vec2(50, 50),
-				getScore() {
-					return Math.floor(Game.level!.currency.resourc.nilrun).toString();
-				},
-			});
-		});
-		this.uiElements.push(nilrun);
+	this.appendChild(new UIButton(new Anchor(VerticalAnchor.BOTTOM, HorizontalAnchor.MIDDLE), new Anchor(VerticalAnchor.BOTTOM, HorizontalAnchor.MIDDLE), new Vec2(50, 50), null, () => { Game.selBuildingType = TowerType.MG}, loadTexture("mg_button.png"), new Vec2(0, 0)));
+	this.appendChild(new UIButton(new Anchor(VerticalAnchor.BOTTOM, HorizontalAnchor.MIDDLE), new Anchor(VerticalAnchor.BOTTOM, HorizontalAnchor.MIDDLE), new Vec2(50, 50), null, () => { Game.selBuildingType = TowerType.SNIPER }, loadTexture("sniper_button.png"), new Vec2(55, 0)));
+	this.appendChild(new UIButton(new Anchor(VerticalAnchor.BOTTOM, HorizontalAnchor.MIDDLE), new Anchor(VerticalAnchor.BOTTOM, HorizontalAnchor.MIDDLE), new Vec2(50, 50), null, () => { Game.selBuildingType = TowerType.ROCKET }, loadTexture("rocket_button.png"), new Vec2(-55, 0)));
     }
 
-    open() {
+    open(_: Viewport) {
         Game.init();
+        Game.doFrame();
     }
 
-    draw() {
+    draw(view: Viewport) {
         Game.doFrame();
-        super.draw();
+        super.draw(view);
     }
 
     mouseUpEvent(_: MouseEvent): void {
@@ -289,6 +182,7 @@ export class GameScreen extends Screen {
     }
 
     mouseMoveEvent(event: MouseEvent): void {
+	super.mouseMoveEvent(event);
         this.lastMouseX = event.clientX;
         this.lastMouseY = event.clientY;
         if (this.isMouseDown && this.isMoveDragging) {
@@ -301,7 +195,7 @@ export class GameScreen extends Screen {
         }
     }
 
-    mouseLeaveEvent(event: MouseEvent): void {
+    mouseLeaveEvent(_: MouseEvent): void {
         this.isMouseDown = false;
         this.isMoveDragging = false;
     }

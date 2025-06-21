@@ -292,6 +292,8 @@ export class TowerType extends BuildingType {
     range: number;
 
     static MG_TEXT = loadTexture("mg_turret_base.png");
+    static ROCKET_TEXT = loadTexture("rocket_turret_base.png");
+    static SNIPER_TEXT = loadTexture("sniper_turret_base.png");
 
     static MG = new TowerType({
         size: new Vec2(48, 48),
@@ -318,7 +320,7 @@ export class TowerType extends BuildingType {
         range: 300,
     });
     static ROCKET = new TowerType({
-        size: new Vec2(10, 10),
+        size: new Vec2(32, 32),
         hasHealth: true,
         maxHealth: 50,
         doCollision: true,
@@ -389,34 +391,15 @@ export class Tower extends Building {
     draw(view: Viewport) {
         switch (this.eType) {
             case TowerType.ROCKET:
-                view.fillRect(
-                    this.pos.x,
-                    this.pos.y,
-                    this.eType.size.x,
-                    this.eType.size.y,
-                    "LightBlue",
-                );
+		view.drawImageCropped(TowerType.ROCKET_TEXT, this.eType.size.x, this.eType.size.y, this.pos.x, this.pos.y, 0, 0);
                 break;
             case TowerType.MG:
 		view.drawImage(TowerType.MG_TEXT, this.pos.x, this.pos.y);
                 break;
             case TowerType.SNIPER:
-                view.fillRect(
-                    this.pos.x,
-                    this.pos.y,
-                    this.eType.size.x,
-                    this.eType.size.y,
-                    "DarkBlue",
-                );
+		view.drawImageCropped(TowerType.SNIPER_TEXT, this.eType.size.x, this.eType.size.y, this.pos.x, this.pos.y, 0, 0);
                 break;
         }
-        view.fillRect(
-            this.pos.x,
-            this.pos.y,
-            this.eType.size.x,
-            this.eType.size.y,
-            "blue",
-        );
         this.drawHealth(view);
     }
 

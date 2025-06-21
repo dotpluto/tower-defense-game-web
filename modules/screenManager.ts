@@ -1,7 +1,7 @@
 "use strict";
 
 import { Screen, StartScreen, GameScreen, EndScreen } from "./screen.js";
-import { canvas } from "./graphics.js";
+import { canvas, view } from "./graphics.js";
 
 export class ScreenManager {
     static halveFps: boolean;
@@ -11,7 +11,7 @@ export class ScreenManager {
 
     static markedForRedraw = false;
 
-	//this symbol is a key for attaching a custom captured state to specific events
+    //this symbol is a key for attaching a custom captured state to specific events
 
     //screens
     static START_SCREEN: Screen;
@@ -27,42 +27,41 @@ export class ScreenManager {
 
         window.addEventListener("resize", (_: UIEvent) => {
             let clientRect = canvas.getClientRects()[0];
-            canvas.width = clientRect.width;
-            canvas.height = clientRect.height;
-			ScreenManager.activeScreen!.resizeEvent();
-            ScreenManager.activeScreen!.draw();
+            canvas.width = clientRect.width * window.devicePixelRatio;
+            canvas.height = clientRect.height * window.devicePixelRatio;
+            ScreenManager.activeScreen!.resizeEvent();
+            ScreenManager.activeScreen!.draw(view);
         });
 
 
         //input forwarding to active screen
+        window.addEventListener("contextmenu", (event) => {
+            event.preventDefault();
+        });
 
-		window.addEventListener("contextmenu", (event) => {
-			event.preventDefault();
-		});
+        canvas.addEventListener("mouseleave", (event) => {
+            ScreenManager.activeScreen?.mouseLeaveEvent(event);
+        });
 
-		canvas.addEventListener("mouseleave", (event) => {
-			ScreenManager.activeScreen?.mouseLeaveEvent(event);
-		});
-		
         canvas.addEventListener("mousemove", (event) => {
             ScreenManager.activeScreen?.mouseMoveEvent(event);
-			ScreenManager.redrawIfShould();
+            ScreenManager.redrawIfShould();
         });
 
         canvas.addEventListener("mouseup", (event) => {
             this.activeScreen?.mouseUpEvent(event);
-			ScreenManager.redrawIfShould();
+            ScreenManager.redrawIfShould();
         });
 
         canvas.addEventListener("mousedown", (mouseEvent) => {
-			const cme = CapturableMouseEvent.makeFrom(mouseEvent);
+            const cme = CapturableMouseEvent.makeFrom(mouseEvent);
             this.activeScreen?.mouseDownEvent(cme);
-			ScreenManager.redrawIfShould();
+            ScreenManager.redrawIfShould();
         });
     }
 
     static setActiveScreen(screen: Screen) {
-		screen.resizeEvent();
+        screen.resizeEvent();
         this.activeScreen?.close();
         //cancelling old animation frame
         if (ScreenManager.lastAnimationFrame !== null) {
@@ -70,7 +69,7 @@ export class ScreenManager {
         }
 
         ScreenManager.activeScreen = screen;
-        screen.open();
+        screen.open(view);
 
         ScreenManager.continueRendering = screen.liveRendering;
         if (screen.liveRendering === true) {
@@ -84,7 +83,7 @@ export class ScreenManager {
     static renderLoop() {
         ScreenManager.evenFrame = !ScreenManager.evenFrame;
         if (!ScreenManager.evenFrame) {
-            ScreenManager.activeScreen?.draw();
+            ScreenManager.activeScreen?.draw(view);
         }
 
         if (ScreenManager.continueRendering)
@@ -95,14 +94,14 @@ export class ScreenManager {
 
     //a window can request a redraw by calling the mark for redraw function
     static markForRedraw() {
-		if(!ScreenManager.continueRendering){
-			ScreenManager.markedForRedraw = true;
-		}
+        if (!ScreenManager.continueRendering) {
+            ScreenManager.markedForRedraw = true;
+        }
     }
 
     static redrawIfShould() {
         if (ScreenManager.markedForRedraw) {
-            ScreenManager.activeScreen!.draw();
+            ScreenManager.activeScreen!.draw(view);
             ScreenManager.markedForRedraw = false;
         }
     }
@@ -112,24 +111,22 @@ export class ScreenManager {
 const wasCapturedSymbol = Symbol("CapturableMouseEvent.wasCapturedSymbol");
 
 /**
-  * Careful! This is not a fully real class. Make sure you know how it works
-  * before using it.
   * This is a wrapper for a MouseEvent that provides it with a extra wasCaptured
   * flag while making sure not to hide any functionality.
  */
 export class CapturableMouseEvent extends MouseEvent {
-	private [wasCapturedSymbol]: boolean = false;
-	static makeFrom(me: MouseEvent): CapturableMouseEvent {
-		const cme = me as CapturableMouseEvent;
-		cme[wasCapturedSymbol] = false;
-		return cme as CapturableMouseEvent;
-	}
+    private [wasCapturedSymbol]: boolean = false;
+    static makeFrom(me: MouseEvent): CapturableMouseEvent {
+        const cme = me as CapturableMouseEvent;
+        cme[wasCapturedSymbol] = false;
+        return cme as CapturableMouseEvent;
+    }
 
-	static checkCaptured(cme: CapturableMouseEvent): boolean {
-		return cme[wasCapturedSymbol];
-	}
+    static checkCaptured(cme: CapturableMouseEvent): boolean {
+        return cme[wasCapturedSymbol];
+    }
 
-	static capture(cme: CapturableMouseEvent) {
-		cme[wasCapturedSymbol] = true;
-	}
+    static capture(cme: CapturableMouseEvent) {
+        cme[wasCapturedSymbol] = true;
+    }
 }
