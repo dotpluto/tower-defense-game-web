@@ -40,4 +40,4 @@ cp ./*.css ${DEV_WEBROOT}
 #folders
 cp -r ./assets/ ${DEV_WEBROOT}
 
-tsc --outDir ${DEV_WEBROOT}
+tsc --outDir ${DEV_WEBROOT} --pretty | less -R
