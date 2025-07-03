@@ -39,8 +39,6 @@ export class Level {
     constructor(public desc: LevelDescriptor) {
         this.cm = new CollisionMap(desc.size.x, desc.size.y);
 		this.buildings.reviveOrCreate().injectData(0, 0, true, BuildingType.HQ, BuildingType.HQ.maxHealth);
-		this.currency.resourc.energy = Infinity;
-		this.currency.resourc.nilrun = Infinity;
 		/*
 		let nodeNum = 5;
 		const sizeX = desc.size.x - BuildingType.MINE.size.x;
