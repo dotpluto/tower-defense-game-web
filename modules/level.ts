@@ -33,7 +33,7 @@ export class Level {
     towers = new EntityList<Tower>(Tower);
     cm: CollisionMap;
     spawnMan: SpawnMan = new SpawnMan();
-	currency: Currency = new Currency({ nilrun: 100, energy: 100 });
+	currency: Currency = new Currency({ nilrun: Infinity, energy: Infinity });
 
 
     constructor(public desc: LevelDescriptor) {

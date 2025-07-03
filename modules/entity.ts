@@ -1,6 +1,6 @@
 "use strict";
 
-import { Viewport, ctx } from "./graphics.js";
+import { Viewport, ctx, view, canvas } from "./graphics.js";
 import { Vec2 } from "./vector2.js";
 import { loadTexture } from "./assetManagement.js";
 import { CollisionMap } from "./physics.js";
@@ -294,6 +294,9 @@ export class TowerType extends BuildingType {
     static MG_TEXT = loadTexture("mg_turret_base.png");
     static ROCKET_TEXT = loadTexture("rocket_turret_base.png");
     static SNIPER_TEXT = loadTexture("sniper_turret_base.png");
+    static MG_HEAD = loadTexture("mg_turret_head.png");
+    static SNIPER_HEAD = loadTexture("sniper_turret_head.png");
+    static ROCKET_HEAD = loadTexture("rocket_turret_head.png");
 
     static MG = new TowerType({
         size: new Vec2(48, 48),
@@ -366,6 +369,7 @@ export class Tower extends Building {
     public eType: TowerType;
     public shootCooldown: number = 0;
     public target: Enemy | null = null;
+    public rotation: number = Math.random() * 2 * Math.PI;
 
     constructor(
         x: number,
@@ -392,15 +396,28 @@ export class Tower extends Building {
         switch (this.eType) {
             case TowerType.ROCKET:
 		view.drawImageCropped(TowerType.ROCKET_TEXT, this.eType.size.x, this.eType.size.y, this.pos.x, this.pos.y, 0, 0);
+		this.drawHead(TowerType.ROCKET_HEAD, 32, 32);
                 break;
             case TowerType.MG:
 		view.drawImage(TowerType.MG_TEXT, this.pos.x, this.pos.y);
+		this.drawHead(TowerType.MG_HEAD, 48, 48);
                 break;
             case TowerType.SNIPER:
 		view.drawImageCropped(TowerType.SNIPER_TEXT, this.eType.size.x, this.eType.size.y, this.pos.x, this.pos.y, 0, 0);
+		this.drawHead(TowerType.SNIPER_HEAD, 32, 32);
                 break;
         }
-        this.drawHealth(view);
+    }
+
+    drawHead(head: HTMLOrSVGImageElement, head_width: number, head_height: number) {
+	if(this.target !== null) {
+	    this.rotation = Vec2.subtract(this.target.center, this.center).toRadians();
+	}
+	ctx.save()
+	ctx.translate(canvas.width / 2 + this.center.x, canvas.height / 2 + this.center.y);
+	ctx.rotate(this.rotation);
+	ctx.drawImage(head, -head_height / 2, -head_width / 2);
+	ctx.restore();
     }
 
     update() {
@@ -462,6 +479,7 @@ interface ProjectileTypeArgs extends EntityTypeArgs { }
 
 export class ProjectileType extends EntityType {
     static BALL_TEXTURE = loadTexture("cannon_ball.png");
+    static ROCKET_TEXTURE = loadTexture("cannon_ball.png");
 
 
     static BALL = new ProjectileType({
