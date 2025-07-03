@@ -108,7 +108,7 @@ export abstract class UIElement extends IUIParent {
 
     computedCenter: Vec2|null = null;
 
-    constructor(innerAnchor: Anchor, outerAnchor: Anchor, offset: Vec2, size: Vec2) {
+    constructor(outerAnchor: Anchor, innerAnchor: Anchor, offset: Vec2, size: Vec2) {
 	super();
         this.innerAnchor = innerAnchor;
         this.outerAnchor = outerAnchor;
@@ -128,6 +128,10 @@ export abstract class UIElement extends IUIParent {
 	return getAnchorOffsetHelper(anchor, this.computedCenter!, this.size);
     }
 
+    getFont(height: number) : string {
+	return Math.floor(height).toString() + "px orbitron";
+    }
+
     mouseMoveEvent(_: MouseEvent) { }
 
     mouseDownEvent(_: CapturableMouseEvent) { }
@@ -135,26 +139,18 @@ export abstract class UIElement extends IUIParent {
     mouseUpEvent(_: MouseEvent) { }
 }
 
-export class UIRect extends UIElement {
-    constructor(innerAnchor: Anchor, outerAnchor: Anchor, offset: Vec2, size: Vec2) {
-	super(innerAnchor, outerAnchor, offset, size);
-    }
-
-    draw(view: Viewport) {
-	view.fillRect(this.computedCenter!.x - this.size.x / 2, this.computedCenter!.y - this.size.y / 2, this.size.x, this.size.y, "Red");
-    }
-}
-
 export class UIText extends UIElement {
     text: string|null;
     font: string;
     padding: Vec2;
+    color: string;
 
-    constructor(innerAnchor: Anchor, outerAnchor: Anchor, offset: Vec2, size: Vec2, text: string|null, paddingPercent: Vec2) {
-        super(innerAnchor, outerAnchor, offset, size);
+    constructor(outerAnchor: Anchor, innerAnchor: Anchor, offset: Vec2, size: Vec2, text: string|null, paddingPercent: Vec2, color: string) {
+        super(outerAnchor, innerAnchor, offset, size);
+	this.color = color;
 	this.text = text;
 	this.padding = new Vec2(paddingPercent.x * size.x, paddingPercent.y * size.y);
-        this.font = Math.floor(this.size.y - this.padding.y).toString() + "px orbitron";
+        this.font = this.getFont(this.size.y - this.padding.y);
 	if(text !== null) this.resizeForTxt();
     }
 
@@ -163,7 +159,7 @@ export class UIText extends UIElement {
 	    ctx.font = this.font;
 	    ctx.textBaseline = "middle";
 	    ctx.textAlign = "center";
-	    view.fillText(this.text, this.computedCenter!.x, this.computedCenter!.y, "Black", this.size.x - this.padding.x);
+	    view.fillText(this.text, this.computedCenter!.x, this.computedCenter!.y, this.color, this.size.x - this.padding.x);
 	}
     }
     
@@ -180,7 +176,7 @@ export class UIButton extends UIText {
     background: string|HTMLOrSVGImageElement;
 
     constructor(outerAnchor: Anchor, innerAnchor: Anchor, size: Vec2, text: string|null, clickCallback: (e: MouseEvent) => void, background: string|HTMLOrSVGImageElement, offset: Vec2) {
-	super(innerAnchor, outerAnchor, offset, size, text, new Vec2(0.2, 0.2));
+	super(outerAnchor, innerAnchor, offset, size, text, new Vec2(0.2, 0.2), "Black");
 	this.clickCallback = clickCallback;
 	this.background = background;
     }
@@ -229,53 +225,24 @@ export class UIButton extends UIText {
     }
 }
 
-/*
-
-export interface UIIconButtonArgs extends UIButtonArgs {
-    icon: HTMLOrSVGImageElement;
-}
-
-export class UIIconButton extends UIButton {
-    icon: HTMLOrSVGImageElement;
-    constructor(args: UIIconButtonArgs) {
-        super(args);
-        this.icon = args.icon;
+export class UIScore extends UIElement  {
+    getScore: () => string;
+    color: string;
+    font: string;
+    text: string;
+    constructor(innerAnchor: Anchor, outerAnchor: Anchor, size: Vec2, offset: Vec2, getScore: () => string, color: string, text: string) {
+        super(outerAnchor, innerAnchor, offset, size);
+	this.getScore = getScore;
+	this.color = color;
+	this.font = this.getFont(this.size.y / 2);
+	this.text = text;
     }
 
     draw(): void {
-        ctx.drawImage(
-            this.icon,
-            this.computed.x - this.size.x / 2,
-            this.computed.y - this.size.y / 2,
-            this.size.x,
-            this.size.y,
-        );
+	ctx.font = this.font;
+	ctx.textBaseline = "middle";
+	ctx.textAlign = "center";
+	view.fillText(this.text, this.computedCenter!.x, this.computedCenter!.y - this.size.y / 4, this.color, this.size.x);
+	view.fillText(this.getScore(), this.computedCenter!.x, this.computedCenter!.y + this.size.y / 4, this.color, this.size.x);
     }
 }
-
-export interface UIScoreArgs extends UITextArgs {
-    getScore: () => string;
-    color: string;
-}
-
-export class UIScore extends UIText {
-    getScore: () => string;
-    color: string;
-    static new(args: UIScoreArgs) {
-        return new UIScore(args);
-    }
-    constructor(args: UIScoreArgs) {
-        super(args);
-        this.getScore = args.getScore;
-        this.color = args.color;
-    }
-
-    draw(color?: string): void {
-        this.text = this.getScore();
-        this.resizeForTxt();
-        super.draw(this.color);
-    }
-
-
-}
-*/

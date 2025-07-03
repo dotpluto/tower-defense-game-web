@@ -9,7 +9,6 @@ import {
     addChild,
     UIScore,
     */
-    UIRect,
     UIElement,
     IUIParent,
     Anchor,
@@ -18,6 +17,7 @@ import {
     HorizontalAnchor,
     UIText,
     UIButton,
+    UIScore,
 } from "./uiElement.js";
 import { Vec2 } from "./vector2.js";
 import { CapturableMouseEvent, ScreenManager } from "./screenManager.js";
@@ -148,6 +148,8 @@ export class GameScreen extends Screen {
 	this.appendChild(new UIButton(new Anchor(VerticalAnchor.BOTTOM, HorizontalAnchor.MIDDLE), new Anchor(VerticalAnchor.BOTTOM, HorizontalAnchor.MIDDLE), new Vec2(50, 50), null, () => { Game.selBuildingType = TowerType.MG}, loadTexture("mg_button.png"), new Vec2(0, 0)));
 	this.appendChild(new UIButton(new Anchor(VerticalAnchor.BOTTOM, HorizontalAnchor.MIDDLE), new Anchor(VerticalAnchor.BOTTOM, HorizontalAnchor.MIDDLE), new Vec2(50, 50), null, () => { Game.selBuildingType = TowerType.SNIPER }, loadTexture("sniper_button.png"), new Vec2(55, 0)));
 	this.appendChild(new UIButton(new Anchor(VerticalAnchor.BOTTOM, HorizontalAnchor.MIDDLE), new Anchor(VerticalAnchor.BOTTOM, HorizontalAnchor.MIDDLE), new Vec2(50, 50), null, () => { Game.selBuildingType = TowerType.ROCKET }, loadTexture("rocket_button.png"), new Vec2(-55, 0)));
+	this.appendChild(new UIScore(new Anchor(VerticalAnchor.TOP, HorizontalAnchor.MIDDLE), new Anchor(VerticalAnchor.TOP, HorizontalAnchor.MIDDLE), new Vec2(200, 100), new Vec2(200, 10), () => { return Math.round(Game.level!.currency.resourc.nilrun * 10) / 10 + "" }, "Green", "ore:"));
+	this.appendChild(new UIScore(new Anchor(VerticalAnchor.TOP, HorizontalAnchor.MIDDLE), new Anchor(VerticalAnchor.TOP, HorizontalAnchor.MIDDLE), new Vec2(200, 100), new Vec2(-200, 10), () => { return Math.round(Game.level!.currency.resourc.energy * 10) / 10 + "" }, "Yellow", "energy:"));
     }
 
     open(_: Viewport) {
