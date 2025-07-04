@@ -2,20 +2,16 @@ import { typeAssert, instanceAssert, assert } from "./debug.js";
 import { Vec2 } from "./vector2.js";
 import { CollisionMap } from "./physics.js";
 import {
-    Tower,
-    TowerType,
-    Projectile,
-    ProjectileType,
-    Building,
-    BuildingType,
-    Enemy,
-    EnemyType,
     EntityList,
 } from "./entity.js";
 import { view, ctx, canvas } from "./graphics.js";
 import { SpawnMan } from "./spawnLogic.js";
 import { Game } from "./game.js";
 import { Currency } from "./currency.js";
+import { Projectile } from "./projectile.js";
+import { Enemy } from "./enemy.js";
+import { Building, BuildingType } from "./building.js";
+import { Tower, TowerType } from "./tower.js";
 
 export class LevelDescriptor {
     constructor(
@@ -33,7 +29,7 @@ export class Level {
     towers = new EntityList<Tower>(Tower);
     cm: CollisionMap;
     spawnMan: SpawnMan = new SpawnMan();
-	currency: Currency = new Currency({ nilrun: Infinity, energy: Infinity });
+	currency: Currency = new Currency({ nilrun: 100, energy: 100 });
 
 
     constructor(public desc: LevelDescriptor) {

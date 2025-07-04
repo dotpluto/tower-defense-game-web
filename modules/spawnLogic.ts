@@ -1,7 +1,8 @@
 import { Level } from "./level.js";
-import { Enemy, EnemyType, Entity } from "./entity.js";
+import { Entity } from "./entity.js";
 import { Vec2 } from "./vector2.js";
 import { Game } from "./game.js";
+import { EnemyType } from "./enemy.js";
 
 export class SpawnMan {
 	static maxTimer: number = 100;

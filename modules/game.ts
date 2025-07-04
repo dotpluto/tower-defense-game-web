@@ -4,13 +4,21 @@ import { Vec2 } from "./vector2.js";
 import { LevelDescriptor, Level } from "./level.js";
 import { canvas, view } from "./graphics.js";
 import { GameScreen } from "./screen.js";
-import { Building, BuildingType, Tower, TowerType } from "./entity.js";
 import { passlog } from "./debug.js";
+import { BuildingType } from "./building.js";
+import { TowerType } from "./tower.js";
 
 export class Game {
     static level: Level | null = null;
     static screen: GameScreen | null = null;
     static selBuildingType: BuildingType | null = null;
+
+    static {
+	(window as any).enableCheatMode = function() {
+	    Game.level!.currency.resourc.energy = Infinity;
+	    Game.level!.currency.resourc.nilrun = Infinity;
+	};
+    }
 
     static placeTower() {
         if (this.selBuildingType !== null && Game.level!.currency.resourc.satisfies(this.selBuildingType.cost)) {
@@ -56,8 +64,17 @@ export class Game {
 
     //checking if the mouse currently is over something that can be clicked on
     static checkMouseInteract(): boolean {
-        //TODO Add something to click
-        return false;
+	let posX = view.viewToWorldX(Game.screen!.lastMouseX * window.devicePixelRatio);
+	let posY = view.viewToWorldY(Game.screen!.lastMouseY * window.devicePixelRatio);
+
+	for(const enemy of Game.level!.towers) {
+	    const inside = enemy.is_point_inside(posX, posY);
+	    if(inside) {
+		console.log(enemy);
+		return true;
+	    }
+	}
+	return false;
     }
 
     static moveView(x: number, y: number) {

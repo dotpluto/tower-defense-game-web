@@ -24,7 +24,8 @@ import { CapturableMouseEvent, ScreenManager } from "./screenManager.js";
 import { Game } from "./game.js";
 import { canvas, ctx, Viewport, view } from "./graphics.js";
 import { loadTexture } from "./assetManagement.js";
-import { BuildingType, TowerType } from "./entity.js";
+import { TowerType } from "./tower.js";
+import { BuildingType } from "./building.js";
 
 export abstract class Screen extends IUIParent {
     constructor(public liveRendering: boolean) {
@@ -145,9 +146,12 @@ export class GameScreen extends Screen {
         super(true);
         Game.screen = this;
 
-	this.appendChild(new UIButton(new Anchor(VerticalAnchor.BOTTOM, HorizontalAnchor.MIDDLE), new Anchor(VerticalAnchor.BOTTOM, HorizontalAnchor.MIDDLE), new Vec2(50, 50), null, () => { Game.selBuildingType = TowerType.MG}, loadTexture("mg_button.png"), new Vec2(0, 0)));
-	this.appendChild(new UIButton(new Anchor(VerticalAnchor.BOTTOM, HorizontalAnchor.MIDDLE), new Anchor(VerticalAnchor.BOTTOM, HorizontalAnchor.MIDDLE), new Vec2(50, 50), null, () => { Game.selBuildingType = TowerType.SNIPER }, loadTexture("sniper_button.png"), new Vec2(55, 0)));
-	this.appendChild(new UIButton(new Anchor(VerticalAnchor.BOTTOM, HorizontalAnchor.MIDDLE), new Anchor(VerticalAnchor.BOTTOM, HorizontalAnchor.MIDDLE), new Vec2(50, 50), null, () => { Game.selBuildingType = TowerType.ROCKET }, loadTexture("rocket_button.png"), new Vec2(-55, 0)));
+	//buttons
+	this.appendChild(new UIButton(new Anchor(VerticalAnchor.BOTTOM, HorizontalAnchor.MIDDLE), new Anchor(VerticalAnchor.BOTTOM, HorizontalAnchor.MIDDLE), new Vec2(50, 50), null, () => { Game.selBuildingType = TowerType.MG}, loadTexture("mg_button.png"), new Vec2(-2.5 + -25, 0)));
+	this.appendChild(new UIButton(new Anchor(VerticalAnchor.BOTTOM, HorizontalAnchor.MIDDLE), new Anchor(VerticalAnchor.BOTTOM, HorizontalAnchor.MIDDLE), new Vec2(50, 50), null, () => { Game.selBuildingType = TowerType.SNIPER }, loadTexture("sniper_button.png"), new Vec2(2.5 + 25, 0)));
+	this.appendChild(new UIButton(new Anchor(VerticalAnchor.BOTTOM, HorizontalAnchor.MIDDLE), new Anchor(VerticalAnchor.BOTTOM, HorizontalAnchor.MIDDLE), new Vec2(50, 50), null, () => { Game.selBuildingType = TowerType.ROCKET }, loadTexture("rocket_button.png"), new Vec2(-7.5 + -75, 0)));
+	this.appendChild(new UIButton(new Anchor(VerticalAnchor.BOTTOM, HorizontalAnchor.MIDDLE), new Anchor(VerticalAnchor.BOTTOM, HorizontalAnchor.MIDDLE), new Vec2(50, 50), null, () => { Game.selBuildingType = BuildingType.SOLAR }, loadTexture("solar_farm.png"), new Vec2(7.5 + 75, 0)));
+	//scores
 	this.appendChild(new UIScore(new Anchor(VerticalAnchor.TOP, HorizontalAnchor.MIDDLE), new Anchor(VerticalAnchor.TOP, HorizontalAnchor.MIDDLE), new Vec2(200, 100), new Vec2(200, 10), () => { return Math.round(Game.level!.currency.resourc.nilrun * 10) / 10 + "" }, "Green", "ore:"));
 	this.appendChild(new UIScore(new Anchor(VerticalAnchor.TOP, HorizontalAnchor.MIDDLE), new Anchor(VerticalAnchor.TOP, HorizontalAnchor.MIDDLE), new Vec2(200, 100), new Vec2(-200, 10), () => { return Math.round(Game.level!.currency.resourc.energy * 10) / 10 + "" }, "Yellow", "energy:"));
     }
@@ -174,7 +178,8 @@ export class GameScreen extends Screen {
             if (event.button === 0) {
                 Game.placeTower();
             } else if (event.button === 2) {
-                this.isMoveDragging = !Game.checkMouseInteract();
+		Game.checkMouseInteract()
+                //this.isMoveDragging = !Game.checkMouseInteract();
                 if (this.isMoveDragging) {
                     this.lastDragX = event.clientX;
                     this.lastDragY = event.clientY;

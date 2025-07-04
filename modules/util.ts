@@ -1,3 +1,5 @@
+import { Vec2 } from "./vector2.js";
+
 /* Deletes the element in an UNSORTED collection.
  * Assumes one or more elements.
 */
@@ -28,3 +30,15 @@ export class EffArray<T> extends Array<T> {
 		}
 	}
 }
+
+export function solve_for_t(a_pos: number, b_pos: number, a_vel: number, b_vel: number) {
+    return b_pos - a_pos / a_vel - b_vel;
+}
+
+export function solve_for_t_vec(a_pos: Vec2, b_pos: Vec2, a_vel: Vec2, b_vel: Vec2): Vec2 {
+    return new Vec2(solve_for_t(a_pos.x, b_pos.x, a_vel.x, b_vel.x), solve_for_t(a_pos.y, b_pos.y, a_vel.y, b_vel.y)); 
+}
+
+// export function equal_with_error(num_a: number, num_b: number, error: number): number {
+//     //TODO
+//     //return num_a + error > num_b && num_a - error < num_b; }
