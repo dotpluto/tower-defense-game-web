@@ -396,28 +396,25 @@ export class Tower extends Building {
         switch (this.eType) {
             case TowerType.ROCKET:
 		view.drawImageCropped(TowerType.ROCKET_TEXT, this.eType.size.x, this.eType.size.y, this.pos.x, this.pos.y, 0, 0);
-		this.drawHead(TowerType.ROCKET_HEAD, 32, 32);
+		this.drawHead(TowerType.ROCKET_HEAD);
                 break;
             case TowerType.MG:
 		view.drawImage(TowerType.MG_TEXT, this.pos.x, this.pos.y);
-		this.drawHead(TowerType.MG_HEAD, 48, 48);
+		this.drawHead(TowerType.MG_HEAD);
                 break;
             case TowerType.SNIPER:
 		view.drawImageCropped(TowerType.SNIPER_TEXT, this.eType.size.x, this.eType.size.y, this.pos.x, this.pos.y, 0, 0);
-		this.drawHead(TowerType.SNIPER_HEAD, 32, 32);
+		this.drawHead(TowerType.SNIPER_HEAD);
                 break;
         }
     }
 
-    drawHead(head: HTMLOrSVGImageElement, head_width: number, head_height: number) {
+    drawHead(head_img: HTMLOrSVGImageElement) {
 	if(this.target !== null) {
 	    this.rotation = Vec2.subtract(this.target.center, this.center).toRadians();
 	}
-	ctx.save()
-	ctx.translate(canvas.width / 2 + this.center.x, canvas.height / 2 + this.center.y);
-	ctx.rotate(this.rotation);
-	ctx.drawImage(head, -head_height / 2, -head_width / 2);
-	ctx.restore();
+	let center = this.center;
+	view.drawImageRotated(head_img, center.x, center.y, this.rotation);
     }
 
     update() {
@@ -444,10 +441,25 @@ export class Tower extends Building {
         dirX = Vec2.numX;
         dirY = Vec2.numY;
 
-        const type: ProjectileType =
-            this.eType === TowerType.MG
-                ? ProjectileType.BALL
-                : ProjectileType.ROCKET;
+        let type: ProjectileType;
+	switch(this.eType) {
+	    case TowerType.ROCKET: {
+		type = ProjectileType.ROCKET;
+		break;
+	    }
+	    case TowerType.SNIPER: {
+		type = ProjectileType.BALL;
+		break;
+	    }
+	    case TowerType.MG: {
+		type = ProjectileType.BALL;
+		break;
+	    }
+	    default: {
+		throw "Tower type is not associated with a projectile.";
+		break;
+	    }
+	}
 
         Game.level!.projectiles.reviveOrCreate().injectData(this.centX, this.centY, true, dirX, dirY, this.eType.damage, type);
     }
@@ -479,7 +491,7 @@ interface ProjectileTypeArgs extends EntityTypeArgs { }
 
 export class ProjectileType extends EntityType {
     static BALL_TEXTURE = loadTexture("cannon_ball.png");
-    static ROCKET_TEXTURE = loadTexture("cannon_ball.png");
+    static ROCKET_TEXTURE = loadTexture("rocket.png");
 
 
     static BALL = new ProjectileType({
@@ -489,7 +501,7 @@ export class ProjectileType extends EntityType {
         doCollision: true,
     });
     static ROCKET = new ProjectileType({
-        size: new Vec2(5, 5),
+        size: new Vec2(10, 10),
         maxHealth: 0,
         hasHealth: false,
         doCollision: true,
@@ -547,13 +559,8 @@ export class Projectile extends Entity<ProjectileType> {
     draw(view: Viewport) {
         switch (this.eType) {
             case ProjectileType.ROCKET:
-                view.fillRect(
-                    this.pos.x,
-                    this.pos.y,
-                    this.eType.size.x,
-                    this.eType.size.y,
-                    "red",
-                );
+		let center = this.center;
+		view.drawImageRotated(ProjectileType.ROCKET_TEXTURE, center.x, center.y, this.vel.toRadians())
                 break;
             case ProjectileType.BALL:
 		view.drawImage(ProjectileType.BALL_TEXTURE, this.pos.x, this.pos.y);

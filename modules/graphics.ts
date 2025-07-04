@@ -23,6 +23,15 @@ export class Viewport {
 	ctx.drawImage(img, offX, offY, width, height, Math.floor(this.worldToViewX(x)), Math.floor(this.worldToViewY(y)), width, height);
     }
 
+    /// @param rotation Rotation in radians
+    drawImageRotated(img: HTMLOrSVGImageElement, x: number, y: number, rotation: number) {
+	ctx.save()
+	ctx.translate(canvas.width / 2 + x, canvas.height / 2 + y);
+	ctx.rotate(rotation);
+	ctx.drawImage(img, -img.width / 2, -img.height / 2);
+	ctx.restore();
+    }
+
     fillRect(left: number, top: number, w: number, h: number, color: string) {
         ctx.fillStyle = color;
         ctx.fillRect(Math.floor(this.worldToViewX(left)), Math.floor(this.worldToViewY(top)), w, h);
