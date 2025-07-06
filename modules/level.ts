@@ -109,6 +109,12 @@ export class Level {
         this.enemies.update();
         this.projectiles.update();
 
+
+        this.buildings.post_update();
+        this.towers.post_update();
+        this.enemies.post_update();
+        this.projectiles.post_update();
+
         this.buildings.cull();
         this.towers.cull();
         this.enemies.cull();

@@ -96,21 +96,26 @@ export class Enemy extends Entity<EnemyType> {
         }
 
         if (this.target !== null) {
-            this.vel = Vec2.subtract(this.target.center, this.center);
-            if (this.vel.length > Enemy.SPEED) {
-                this.vel.normalize();
-                this.vel.scale(Enemy.SPEED);
+            let target_diff: Vec2 = Vec2.subtract(this.target!.center, this.center);
+            if (target_diff.length > Enemy.SPEED) {
+                target_diff.normalize();
+                target_diff.scale(Enemy.SPEED);
             }
-	    if(isNaN(this.vel.x)) this.vel.x = 0;
-	    if(isNaN(this.vel.y)) this.vel.y = 0;
-        }
 
-	this.pos.add(this.vel);
+	    if(this.vel.x > target_diff.x) this.vel.x -= 0.2;
+	    if(this.vel.x < target_diff.x) this.vel.x += 0.2;
+	    if(this.vel.y > target_diff.y) this.vel.y -= 0.2;
+	    if(this.vel.y < target_diff.y) this.vel.y += 0.2;
+        }
 
         if (this.markDead) {
             this.cleanup();
         }
         return this.markDead;
+    }
+
+    post_update() {
+	this.pos.add(this.vel);
     }
 
     findTarget() {
@@ -151,14 +156,11 @@ export class Enemy extends Entity<EnemyType> {
             this.markDead = true;
             oEntity.takeDamage();
         } else if (oEntity instanceof Enemy) {
-            let difX = oEntity.pos.x - this.pos.x;
-            let difY = oEntity.pos.y - this.pos.y;
-            Vec2.numNormalize(difX, difY);
-            difX = Vec2.numX;
-            difY = Vec2.numY;
-            Vec2.numScale(difX, difY, 8);
-            this.pos.x -= difX;
-            this.pos.y -= difY;
+	    let diff = Vec2.subtract(oEntity.center, this.center);
+	    diff.normalize();
+	    diff.scale(1);
+	    this.vel.x -= diff.x;
+	    this.vel.y -= diff.y;
         }
     }
 }

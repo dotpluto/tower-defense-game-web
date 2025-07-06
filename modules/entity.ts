@@ -125,6 +125,7 @@ export abstract class Entity<T extends EntityType> {
       */
     cleanup() { }
     update() { }
+    post_update() {}
 
     /**
       * Create a empty husk ready for injection.
@@ -176,6 +177,12 @@ export class EntityList<T extends Entity<any>> {
     update() {
         for (let i = 0; i < this.alive.length; i++) {
             this.alive[i].update();
+        }
+    }
+
+    post_update() {
+        for (let i = 0; i < this.alive.length; i++) {
+            this.alive[i].post_update();
         }
     }
 
