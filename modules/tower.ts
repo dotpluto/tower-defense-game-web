@@ -5,7 +5,7 @@ import { Enemy } from "./enemy.js";
 import { Game } from "./game.js";
 import { view, Viewport } from "./graphics.js";
 import { ProjectileType } from "./projectile.js";
-import { solve_for_t_vec } from "./util.js";
+import { find_tower_hit_time, solve_for_t_vec } from "./util.js";
 import { Vec2 } from "./vector2.js";
 
 interface TowerTypeArgs extends BuildingTypeArgs {
@@ -38,7 +38,7 @@ export class TowerType extends BuildingType {
         cost: new Resources({ energy: 50, nilrun: 10 }),
         shootCooldownMax: 5,
         damage: 2,
-        speed: 8,
+        speed: 6,
         generation: new Resources({}),
         range: 150,
 	bullet_type: ProjectileType.BALL,
@@ -51,7 +51,7 @@ export class TowerType extends BuildingType {
         cost: new Resources({ energy: 50, nilrun: 15 }),
         shootCooldownMax: 30,
         damage: 6,
-        speed: 8,
+        speed: 6,
         generation: new Resources({}),
         range: 300,
 	bullet_type: ProjectileType.BALL,
@@ -64,7 +64,7 @@ export class TowerType extends BuildingType {
         cost: new Resources({ energy: 50, nilrun: 10 }),
         shootCooldownMax: 20,
         damage: 16,
-        speed: 8,
+        speed: 6,
         generation: new Resources({}),
         range: 350,
 	bullet_type: ProjectileType.ROCKET,
@@ -145,6 +145,7 @@ export class Tower extends Building {
 		this.drawHead(TowerType.SNIPER_HEAD);
                 break;
         }
+	//view.fillRect(this.shoot_pos.x - 5, this.shoot_pos.y - 5, 10, 10, "green");
     }
 
     drawHead(head_img: HTMLOrSVGImageElement) {
@@ -171,36 +172,25 @@ export class Tower extends Building {
     }
 
     shoot() {
-	if(this.distanceTo(this.target!) <= this.eType.range) {
+	if(Vec2.subtract(this.shoot_pos, this.center).length <= this.eType.range) {
 	    //this.target must be nonnull
-	    let dirX = this.target!.centX - this.centX;
-	    let dirY = this.target!.centY - this.centY;
+	    let target_pos = Vec2.subtract(this.shoot_pos, this.center);
+	    target_pos.normalize();
+	    target_pos.scale(this.eType.speed);
 
-	    Vec2.numNormalize(dirX, dirY);
-	    dirX = Vec2.numX;
-	    dirY = Vec2.numY;
-
-	    Vec2.numScale(dirX, dirY, this.eType.speed);
-	    dirX = Vec2.numX;
-	    dirY = Vec2.numY;
-
-	    Game.level!.projectiles.reviveOrCreate().injectData(this.centX, this.centY, true, dirX, dirY, this.eType.damage, this.eType.bullet_type);
+	    Game.level!.projectiles.reviveOrCreate().injectData(this.centX, this.centY, true, target_pos.x, target_pos.y, this.eType.damage, this.eType.bullet_type);
 	}
     }
 
     calc_shoot_pos() {
-	// let vec_to_target = Vec2.subtract(this.target!.center, this.center);
-	// vec_to_target.normalize();
-	// vec_to_target.scale(this.eType.speed);
-	// let t_vec = solve_for_t_vec(this.center, this.target!.center, vec_to_target, this.target!.vel);
-	// console.log(t_vec.x, t_vec.y);
-	// if(t_vec.x === t_vec.y) {
-	//     vec_to_target.scale(t_vec.x);
-	//     this.shoot_pos = Vec2.add(this.center, vec_to_target);
-	// } else {
-	//     this.shoot_pos = this.target!.center;
-	// }
-	this.shoot_pos = this.target!.center;
+	let hit_time = find_tower_hit_time(this.center, this.target!.center, this.target!.vel, this.eType.speed);
+	if(!isNaN(hit_time) && hit_time > 0) {
+	    let offset = this.target!.vel.copy();
+	    offset.scale(hit_time);
+	    this.shoot_pos = Vec2.add(this.target!.center, offset);
+	} else {
+	    this.shoot_pos = this.target!.center;
+	}
     }
 
     findTarget() {
