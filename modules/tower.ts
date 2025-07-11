@@ -197,19 +197,25 @@ export class Tower extends Building {
         const potEnem = Game.level!.enemies.getRandom();
 
         if (potEnem !== undefined) {
-            if (this.target === null) {
-                potEnem.addShooter(this);
-                this.target = potEnem;
-            } else {
-                let dist = Enemy.getDist(this, this.target);
-                let nDist = Enemy.getDist(this, potEnem);
-                if (nDist < dist) {
-                    this.target.removeShooter(this);
-                    this.target = potEnem;
-                    potEnem.addShooter(this);
-                }
-            }
+	    if(this.is_valid_target(potEnem)) {
+		if (this.target === null) {
+		    potEnem.addShooter(this);
+		    this.target = potEnem;
+		} else {
+		    let dist = Enemy.getDist(this, this.target!);
+		    let nDist = Enemy.getDist(this, potEnem);
+		    if (nDist < dist) {
+			this.target!.removeShooter(this);
+			this.target = potEnem;
+			potEnem.addShooter(this);
+		    }
+		}
+	    }
         }
+    }
+
+    is_valid_target(enemy: Enemy): boolean {
+	return enemy !== null && enemy.lockedOnMe.length === 0;
     }
 
     notifyTargetDied() {
