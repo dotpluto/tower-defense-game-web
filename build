@@ -40,4 +40,7 @@ cp ./*.css ${DEV_WEBROOT}
 #folders
 cp -r ./assets/ ${DEV_WEBROOT}
 
-tsc --outDir ${DEV_WEBROOT} --pretty | less -R
+tsc_message=$(tsc --outDir ${DEV_WEBROOT} --pretty)
+if [ -n "$tsc_message" ]; then
+    echo "$tsc_message" | less -R
+fi
