@@ -1,37 +1,10 @@
-# About Particles
-In this game you are dropped on uncharted planets and are tasked with building a base that extracts as much resources as possible as quickly as possible. But don't get too greedy or the ever increasing amount of locals will get to you before you can evacuate with your loot.
+# Tower Defense Game
+## How to play?
+Defend your reactor from the approaching enemies by carefully crafting a defense.
+You can choose between three turret types and the solar panel.
+- The **Rocket Turret** has long range and high stopping power.
+- The **Machine Gun Turret** has a high firerate but low accuracy.
+- The **Sniper Turret** can penetrate targets.
+- The **Solar Panel** generates desperately needed energy.
 
-## TODO
-- introduce some actual enemy spawning
-    - enemies spawn from temporary cave exits
-    - enemies grow linerarly with buildings
-    - linear growth
-    - slowly ramping up exponential growth
-    - around all buildings
-- introduce meta-progression
-  - explore different planets
-    - planets with different levels of energy
-    - planets good for one of the following: constant solar (expensive price, unlimited), varying solar (batteries), limited geothermal (low price, limited)
-    - local resources and global resources
-- implement planet selection screen using a singleton?
-- tower type ideas:
-  - money farm (invest for later profit)
-  - laser turret (sweeping aoe turret with slow moving laser beam)
-  - melee tower (generate damage points which are spent to damage enemies on contact)
-  - shotgun tower
-- proper error screen
-- fancy graphics/ux
-  - transition landing screen planet selection -> planet (picture of base entering orbit)
-  - sound with limited sounds at once
-
-## Notes
-### UI
-The screen class simply contains ui elements and manages any potential canvas renders.
-It passes down events but can choose to process them.
-
-The UI elements contain the following data:
-optional "anchor element" this will be the reference point for the anchor positioning. If it is null the screen will be used.
-"external anchor points x and y" where on the parent element the anchor will lie
-"internal anchor points x and y" where on the current element the anchor will lie
-"offset" screen space shift after other transformations
-"size" size
+Try out the game right [here](https://dotpluto.github.io/tower-defense-game-web-demo).
