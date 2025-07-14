@@ -15,13 +15,13 @@ export class Game {
 
     static {
 	(window as any).enableCheatMode = function() {
-	    Game.level!.currency.resourc.energy = Infinity;
-	    Game.level!.currency.resourc.nilrun = Infinity;
+	    Game.level!.currency.owned.energy = Infinity;
+	    Game.level!.currency.owned.nilrun = Infinity;
 	};
     }
 
     static placeTower() {
-        if (this.selBuildingType !== null && Game.level!.currency.resourc.satisfies(this.selBuildingType.cost)) {
+        if (this.selBuildingType !== null && Game.level!.currency.owned.satisfies(this.selBuildingType.cost)) {
             const centerX = view.viewToWorldX(window.devicePixelRatio * this.screen!.lastMouseX);
             const centerY = view.viewToWorldY(window.devicePixelRatio * this.screen!.lastMouseY);
 
@@ -44,7 +44,7 @@ export class Game {
                 this.level!.buildings.reviveOrCreate().injectData(centerX, centerY, true, this.selBuildingType, this.selBuildingType.maxHealth);
             }
 
-            Game.level!.currency.resourc.remove(this.selBuildingType.cost);
+            Game.level!.currency.owned.remove(this.selBuildingType.cost);
         }
     }
 

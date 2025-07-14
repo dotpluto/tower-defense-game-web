@@ -7,7 +7,7 @@ import {
 import { view, ctx, canvas } from "./graphics.js";
 import { SpawnMan } from "./spawnLogic.js";
 import { Game } from "./game.js";
-import { Currency } from "./currency.js";
+import { CurrencyManager } from "./currency.js";
 import { Projectile } from "./projectile.js";
 import { Enemy } from "./enemy.js";
 import { Building, BuildingType } from "./building.js";
@@ -29,35 +29,12 @@ export class Level {
     towers = new EntityList<Tower>(Tower);
     cm: CollisionMap;
     spawnMan: SpawnMan = new SpawnMan();
-	currency: Currency = new Currency({ nilrun: 100, energy: 100 });
+    currency: CurrencyManager = new CurrencyManager(100, 100);
 
 
     constructor(public desc: LevelDescriptor) {
         this.cm = new CollisionMap(desc.size.x, desc.size.y);
-		this.buildings.reviveOrCreate().injectData(0, 0, true, BuildingType.HQ, BuildingType.HQ.maxHealth);
-		/*
-		let nodeNum = 5;
-		const sizeX = desc.size.x - BuildingType.MINE.size.x;
-		const sizeY = desc.size.y - BuildingType.MINE.size.y;
-		while(nodeNum > 0) {
-			const posX = Math.random() * sizeX;
-			const posY = Math.random() * sizeY;
-			let skip = false;
-			for (let index = 0; index < this.buildings.alive.length; index++) {
-				const build = this.buildings.alive[index];
-				if(Vec2.doVectorSquaresIntersect(new Vec2(posX, posY), BuildingType.MINE.size, build.pos, build.eType.size)) {
-					skip = true;
-					break;
-				}
-			}
-			if(skip) {
-				continue;
-			}
-
-			this.buildings.reviveOrCreate().injectData(posX, posY, true, BuildingType.MINE, BuildingType.MINE.maxHealth);
-			nodeNum -= 1;
-		}
-		*/
+	this.buildings.reviveOrCreate().injectData(0, 0, true, BuildingType.HQ, BuildingType.HQ.maxHealth);
     }
 
     draw() {

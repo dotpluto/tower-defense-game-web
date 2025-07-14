@@ -151,7 +151,7 @@ export class Enemy extends Entity<EnemyType> {
     doCollisionResults(oEntity: Entity<any>): void {
         if (oEntity instanceof Projectile) {
             if (!this.markDead) {
-                Game.level!.currency.resourc.nilrun += 0.1;
+                Game.level!.currency.owned.nilrun += 0.1;
             }
             this.markDead = true;
             oEntity.takeDamage();

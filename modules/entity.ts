@@ -7,7 +7,7 @@ import { CollisionMap } from "./physics.js";
 import { Game } from "./game.js";
 import { } from "./level.js";
 import { EffArray, fastDelete } from "./util.js";
-import { Currency, Resources } from "./currency.js";
+import { CurrencyManager, Resources } from "./currency.js";
 
 export interface EntityTypeArgs {
     size: Vec2;
@@ -119,7 +119,7 @@ export abstract class Entity<T extends EntityType> {
     // virtual functions
     draw(_: Viewport): void { }
     doCollisionResults(_: Entity<any>): void { }
-    init(_: Currency) { }
+    init(_: CurrencyManager) { }
     /**
       * This should only be called by the cull function (or its successor)
       */

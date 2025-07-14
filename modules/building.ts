@@ -25,8 +25,8 @@ export class BuildingType extends EntityType {
         doCollision: true,
         hasHealth: true,
         maxHealth: 100,
-        cost: new Resources({}),
-        generation: new Resources({ nilrun: 0.01, energy: 0.01 }),
+        cost: new Resources(0, 0),
+        generation: new Resources(0, 0),
     });
 
     static SOLAR = new BuildingType({
@@ -34,8 +34,8 @@ export class BuildingType extends EntityType {
         doCollision: true,
         hasHealth: false,
         maxHealth: 100,
-        cost: new Resources({ energy: 10, nilrun: 15 }),
-        generation: new Resources({ energy: 0.01 }),
+        cost: new Resources(10, 15),
+        generation: new Resources(0.1, 0),
     });
 
     static MINE = new BuildingType({
@@ -43,8 +43,8 @@ export class BuildingType extends EntityType {
         doCollision: true,
         hasHealth: true,
         maxHealth: 50,
-        cost: new Resources({}),
-        generation: new Resources({ nilrun: 0.01 }),
+        cost: new Resources(0, 0),
+        generation: new Resources(0, 0),
     });
 
     constructor(args: BuildingTypeArgs) {
@@ -126,7 +126,7 @@ export class Building
             case BuildingType.MINE:
                 break;
             default:
-                Game.level!.currency.resourc.add(this.eType.generation);
+                Game.level!.currency.owned.add(this.eType.generation);
                 break;
         }
     }
