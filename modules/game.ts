@@ -41,7 +41,6 @@ export class Game {
             }
 
             this.level!.towers.revive_or_create().injectTowerData(centerX, centerY, true, tower_type, entity_type.maxHealth);
-            console.log(entity_type.id);
             Game.level!.currency.owned.remove(building_type.cost);
         }
 
