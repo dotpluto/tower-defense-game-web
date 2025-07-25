@@ -1,7 +1,7 @@
 "use strict";
 
 import { Screen, StartScreen, GameScreen, EndScreen } from "./screen.js";
-import { canvas, view } from "./graphics.js";
+import { canvas } from "./graphics.js";
 
 export class ScreenManager {
     static halveFps: boolean;
@@ -30,7 +30,7 @@ export class ScreenManager {
             canvas.width = clientRect.width * window.devicePixelRatio;
             canvas.height = clientRect.height * window.devicePixelRatio;
             ScreenManager.activeScreen!.resizeEvent();
-            ScreenManager.activeScreen!.draw(view);
+            ScreenManager.activeScreen!.draw();
         });
 
 
@@ -69,7 +69,7 @@ export class ScreenManager {
         }
 
         ScreenManager.activeScreen = screen;
-        screen.open(view);
+        screen.open();
 
         ScreenManager.continueRendering = screen.liveRendering;
         if (screen.liveRendering === true) {
@@ -83,7 +83,7 @@ export class ScreenManager {
     static renderLoop() {
         ScreenManager.evenFrame = !ScreenManager.evenFrame;
         if (!ScreenManager.evenFrame) {
-            ScreenManager.activeScreen?.draw(view);
+            ScreenManager.activeScreen?.draw();
         }
 
         if (ScreenManager.continueRendering)
@@ -101,7 +101,7 @@ export class ScreenManager {
 
     static redrawIfShould() {
         if (ScreenManager.markedForRedraw) {
-            ScreenManager.activeScreen!.draw(view);
+            ScreenManager.activeScreen!.draw();
             ScreenManager.markedForRedraw = false;
         }
     }

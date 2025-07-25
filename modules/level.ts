@@ -1,4 +1,3 @@
-import { typeAssert, instanceAssert, assert } from "./debug.js";
 import { Vec2 } from "./vector2.js";
 import { CollisionMap } from "./physics.js";
 import {
@@ -23,10 +22,10 @@ export class LevelDescriptor {
 
 export class Level {
     frameCount: number = 0;
-    projectiles = new EntityList<Projectile>(Projectile);
-    enemies = new EntityList<Enemy>(Enemy);
-    buildings = new EntityList<Building>(Building);
-    towers = new EntityList<Tower>(Tower);
+    projectiles = new EntityList<Projectile>(Projectile.create_projectile_husk);
+    enemies = new EntityList<Enemy>(Enemy.create_enemy_husk);
+    buildings = new EntityList<Building>(Building.create_building_husk);
+    towers = new EntityList<Tower>(Tower.create_tower_husk);
     cm: CollisionMap;
     spawnMan: SpawnMan = new SpawnMan();
     currency: CurrencyManager = new CurrencyManager(100, 100);
@@ -34,7 +33,7 @@ export class Level {
 
     constructor(public desc: LevelDescriptor) {
         this.cm = new CollisionMap(desc.size.x, desc.size.y);
-	this.buildings.reviveOrCreate().injectData(0, 0, true, BuildingType.HQ, BuildingType.HQ.maxHealth);
+	this.buildings.revive_or_create().injectBuildingData(0, 0, true, BuildingType.HQ, BuildingType.HQ.entity_type.maxHealth);
     }
 
     draw() {
@@ -44,26 +43,23 @@ export class Level {
         //this.cm.debugDraw(this);
 
         //updating
-        this.buildings.draw(view);
-        this.towers.draw(view);
-        this.enemies.draw(view);
-        this.projectiles.draw(view);
+        this.buildings.draw();
+        this.towers.draw();
+        this.enemies.draw();
+        this.projectiles.draw();
 
         if (Game.selBuildingType !== null) {
-			const worldX = view.viewToWorldX(Game.screen!.lastMouseX * window.devicePixelRatio);
-			const worldY = view.viewToWorldY(Game.screen!.lastMouseY * window.devicePixelRatio);
+	    const worldX = view.viewToWorldX(Game.screen!.lastMouseX * window.devicePixelRatio);
+	    const worldY = view.viewToWorldY(Game.screen!.lastMouseY * window.devicePixelRatio);
 
-			if(Game.selBuildingType instanceof TowerType) {
-				Tower.drawBlueprint(
-					view,
-					worldX,
-					worldY,
-					Game.selBuildingType,
-				);
-			} else {
-				view.fillRect(worldX - Game.selBuildingType.size.x / 2, worldY - Game.selBuildingType.size.y / 2, Game.selBuildingType.size.x, Game.selBuildingType.size.y, "green");
-			}
-
+	    if(Game.selBuildingType instanceof TowerType) {
+		    Tower.drawBlueprint(
+			    view,
+			    worldX,
+			    worldY,
+			    Game.selBuildingType,
+		    );
+	    }
         }
     }
 
@@ -71,15 +67,15 @@ export class Level {
         //adding to collision map
         this.cm.reset();
 
-        this.buildings.addToCm(this.cm);
-        this.towers.addToCm(this.cm);
-        this.enemies.addToCm(this.cm);
-        this.projectiles.addToCm(this.cm);
+        this.buildings.add_to_cm(this.cm);
+        this.towers.add_to_cm(this.cm);
+        this.enemies.add_to_cm(this.cm);
+        this.projectiles.add_to_cm(this.cm);
 
-        this.buildings.doCollision();
-        this.towers.doCollision();
-        this.enemies.doCollision();
-        this.projectiles.doCollision();
+        this.buildings.do_collisions();
+        this.towers.do_collisions();
+        this.enemies.do_collisions();
+        this.projectiles.do_collisions();
 
         this.buildings.update();
         this.towers.update();
@@ -99,7 +95,7 @@ export class Level {
 
         //spawning logic
         this.spawnMan.update();
-		this.currency.update();
+	this.currency.update();
 
         this.frameCount += 1;
     }

@@ -1,6 +1,5 @@
 import { Level } from "./level.js";
 import { Entity } from "./entity.js";
-import { Vec2 } from "./vector2.js";
 import { Game } from "./game.js";
 import { EnemyType } from "./enemy.js";
 
@@ -43,10 +42,10 @@ export class SpawnMan {
 				break;
 		}
 
-		Game.level!.enemies.reviveOrCreate().injectData(x, y, true, EnemyType.SMALL, EnemyType.SMALL.maxHealth);
+		Game.level!.enemies.revive_or_create().injectEnemyData(x, y, true, EnemyType.SMALL, EnemyType.SMALL.entity_type.maxHealth);
 	}
 
-	getRandomBuilding(level: Level): Entity<any> {
+	getRandomBuilding(level: Level): Entity {
 		const buildingCount = level.towers.alive.length + level.buildings.alive.length;
 		const buildInd = Math.floor(buildingCount * Math.random());
 		if(buildInd < level.towers.alive.length) {

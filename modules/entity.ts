@@ -1,19 +1,16 @@
 "use strict";
 
-import { Viewport, ctx, view, canvas } from "./graphics.js";
 import { Vec2 } from "./vector2.js";
-import { loadTexture } from "./assetManagement.js";
 import { CollisionMap } from "./physics.js";
-import { Game } from "./game.js";
 import { } from "./level.js";
 import { EffArray, fastDelete } from "./util.js";
-import { CurrencyManager, Resources } from "./currency.js";
 
 export interface EntityTypeArgs {
     size: Vec2;
     doCollision: boolean;
     hasHealth: boolean;
     maxHealth: number;
+    id: string;
 }
 
 export abstract class EntityType {
@@ -21,47 +18,51 @@ export abstract class EntityType {
     public doCollision: boolean;
     public hasHealth: boolean;
     public maxHealth: number;
+    public id: string;
 
     constructor(args: EntityTypeArgs) {
         this.size = args.size;
         this.doCollision = args.doCollision;
         this.hasHealth = args.hasHealth;
         this.maxHealth = args.maxHealth;
+	this.id = args.id;
     }
 }
 
-export abstract class Entity<T extends EntityType> {
+export abstract class Entity {
     /**
       * Wheter this entity should be culled in the next check.
       */
     public markDead = false;
     public pos: Vec2 = new Vec2(0, 0);
-    public abstract eType: T;
+    public entity_type: EntityType;
     public health: number;
 
-    public sections: Entity<any>[][] = []; //collision map sectors of current pass
+    public sections: Entity[][] = []; //collision map sectors of current pass
 
     constructor(
         x: number,
         y: number,
         isCenter: boolean,
-        eType: T,
+        entity_type: EntityType,
         health: number,
     ) {
-        this.setPos(x, y, isCenter, eType.size);
+        this.setPos(x, y, isCenter, entity_type.size);
         this.health = health;
+	this.entity_type = entity_type
     }
 
     injectEntityData(
         x: number,
         y: number,
         isCenter: boolean,
-        eType: T,
+        entity_type: EntityType,
         health: number,
     ) {
-        this.setPos(x, y, isCenter, eType.size);
+        this.setPos(x, y, isCenter, entity_type.size);
         this.health = health;
-        this.eType = eType;
+        this.entity_type = entity_type;
+	this.markDead = false;
     }
 
     setPos(x: number, y: number, isCenter: boolean, size: Vec2) {
@@ -71,21 +72,21 @@ export abstract class Entity<T extends EntityType> {
 
     get center(): Vec2 {
         return new Vec2(
-            this.pos.x + this.eType.size.x / 2,
-            this.pos.y + this.eType.size.y / 2,
+            this.pos.x + this.entity_type.size.x / 2,
+            this.pos.y + this.entity_type.size.y / 2,
         );
     }
 
     get centX() {
-        return this.pos.x + this.eType.size.x / 2;
+        return this.pos.x + this.entity_type.size.x / 2;
     }
 
     get centY() {
-        return this.pos.y + this.eType.size.y / 2;
+        return this.pos.y + this.entity_type.size.y / 2;
     }
 
     checkForCollisions() {
-        let checkedEntities: Set<Entity<any>> = new Set();
+        let checkedEntities: Set<Entity> = new Set();
         checkedEntities.add(this);
 
         for (const section of this.sections) {
@@ -102,12 +103,12 @@ export abstract class Entity<T extends EntityType> {
         }
     }
 
-    collidesWith(e: Entity<any>) {
+    collidesWith(e: Entity) {
         return Vec2.doVectorSquaresIntersect(
             this.pos,
-            this.eType.size,
+            this.entity_type.size,
             e.pos,
-            e.eType.size,
+            e.entity_type.size,
         );
     }
 
@@ -117,24 +118,19 @@ export abstract class Entity<T extends EntityType> {
     }
 
     // virtual functions
-    draw(_: Viewport): void { }
-    doCollisionResults(_: Entity<any>): void { }
-    init(_: CurrencyManager) { }
-    /**
-      * This should only be called by the cull function (or its successor)
-      */
-    cleanup() { }
+    draw(): void { }
+    doCollisionResults(_: Entity): void { }
+    cleanup() { } //cleanup should only be called by the cull function
     update() { }
-    post_update() {}
+    post_update() { }
 
-    /**
-      * Create a empty husk ready for injection.
-      */
-    static createDefault() {
-        throw new Error("Default static method wasn't overriden properly.");
+    static getDist(a: Entity, b: Entity) {
+        let difX = a.centX - b.centX;
+        let difY = a.centY - b.centY;
+        return Vec2.numLength(difX, difY);
     }
 
-    distanceTo<T extends Entity<any>>(othEnt: T) {
+    distanceTo<T extends Entity>(othEnt: T) {
         const difX = this.centX - othEnt.centX;
         const difY = this.centY - othEnt.centY;
 
@@ -142,59 +138,55 @@ export abstract class Entity<T extends EntityType> {
     }
 
     is_point_inside(x: number, y: number) {
-	return x >= this.pos.x && y >= this.pos.y && x < this.pos.x + this.eType.size.x && y < this.pos.y + this.eType.size.y;
+        return x >= this.pos.x && y >= this.pos.y && x < this.pos.x + this.entity_type.size.x && y < this.pos.y + this.entity_type.size.y;
     }
 }
 
 /*
  * Content is explicitly unordered!
  */
-export class EntityList<T extends Entity<any>> {
+export class EntityList<T extends Entity> {
     public alive: EffArray<T> = new EffArray();
     public dead: EffArray<T> = new EffArray();
-    public createDefault: () => T;
 
-    constructor(constr: new (...args: any[]) => T) {
-        this.createDefault = (constr as any).createDefault;
-    }
+    constructor(private create_husk_of_t: () => T) { }
 
-    reviveOrCreate(): T {
-        let entity = this.dead.pop();
-        if (entity === undefined) {
-            entity = this.createDefault();
+    add_to_cm(cm: CollisionMap) {
+        for (let alive of this.alive) {
+            cm.add(alive);
         }
-        entity.markDead = false;
-        this.alive.push(entity);
-        return entity;
     }
 
-    addToCm(cm: CollisionMap) {
-        this.alive.forEach((entity) => {
-            cm.add(entity);
-        });
+    revive_or_create() {
+        let revived_or_created = this.dead.pop();
+	if(revived_or_created === undefined) {
+	    revived_or_created = this.create_husk_of_t();
+	}
+	this.alive.push(revived_or_created);
+	return revived_or_created;
     }
 
     update() {
-        for (let i = 0; i < this.alive.length; i++) {
-            this.alive[i].update();
+        for (let alive of this.alive) {
+            alive.update();
         }
     }
 
     post_update() {
-        for (let i = 0; i < this.alive.length; i++) {
-            this.alive[i].post_update();
+        for (let alive of this.alive) {
+            alive.post_update();
         }
     }
 
-    draw(cam: Viewport) {
-        this.alive.forEach((entity) => {
-            entity.draw(cam);
-        });
+    draw() {
+        for (let alive of this.alive) {
+            alive.draw();
+        }
     }
 
-    doCollision() {
-        for (const entity of this.alive) {
-            entity.checkForCollisions();
+    do_collisions() {
+        for (const alive of this.alive) {
+            alive.checkForCollisions();
         }
     }
 
@@ -215,6 +207,6 @@ export class EntityList<T extends Entity<any>> {
     }
 
     [Symbol.iterator](): Iterator<T> {
-	return this.alive[Symbol.iterator]();
+        return this.alive[Symbol.iterator]();
     }
 }

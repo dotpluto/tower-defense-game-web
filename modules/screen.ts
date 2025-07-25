@@ -1,44 +1,31 @@
 import {
-    /* 
-    UIText,
-    HAnchPoint,
-    VerticalAnchor,
-    UIButton,
-    UIElement,
-    UIIconButton,
-    addChild,
-    UIScore,
-    */
-    UIElement,
     IUIParent,
     Anchor,
     getAnchorOffsetHelper,
     VerticalAnchor,
     HorizontalAnchor,
-    UIText,
     UIButton,
     UIScore,
 } from "./uiElement.js";
 import { Vec2 } from "./vector2.js";
 import { CapturableMouseEvent, ScreenManager } from "./screenManager.js";
 import { Game } from "./game.js";
-import { canvas, ctx, Viewport, view } from "./graphics.js";
 import { loadTexture } from "./assetManagement.js";
 import { TowerType } from "./tower.js";
-import { BuildingType } from "./building.js";
+import { canvas, ctx } from "./graphics.js";
 
 export abstract class Screen extends IUIParent {
     constructor(public liveRendering: boolean) {
         super();
     }
 
-    draw(view: Viewport) {
+    draw() {
         this.children.forEach((e) => {
-            e.draw(view);
+            e.draw();
         });
     }
 
-    open(_: Viewport) { }
+    open() { }
     close() { }
 
     //event passdowns
@@ -60,7 +47,7 @@ export abstract class Screen extends IUIParent {
         }
     }
 
-    mouseLeaveEvent(event: MouseEvent) {
+    mouseLeaveEvent(_event: MouseEvent) {
     }
 
     resizeEvent() {
@@ -81,52 +68,29 @@ export class StartScreen extends Screen {
         this.appendChild(new UIButton(new Anchor(VerticalAnchor.MIDDLE, HorizontalAnchor.MIDDLE), new Anchor(VerticalAnchor.MIDDLE, HorizontalAnchor.MIDDLE), new Vec2(100, 120), "Play", () => { ScreenManager.setActiveScreen(ScreenManager.GAME_SCREEN) }, "Red", new Vec2(0, 0)));
     }
 
-    draw(view: Viewport) {
+    draw() {
         ctx.fillStyle = "Black";
         ctx.fillRect(0, 0, canvas.width, canvas.height);
-        super.draw(view);
+        super.draw();
     }
 
-    open(view: Viewport) {
-        this.draw(view);
+    open() {
+        this.draw();
     }
 }
 
 export class EndScreen extends Screen {
     constructor() {
         super(false);
-        /*
-        this.children.push(
-            UIText.new({
-                vertical: VAnchPoint.MIDDLE,
-                horizontal: HAnchPoint.MIDDLE,
-                offset: new Vec2(0, 0),
-                size: new Vec2(0, 96),
-                text: "Game Over",
-            }),
-        );
-        this.children.push(
-            UIButton.new({
-                vertical: VAnchPoint.MIDDLE,
-                horizontal: HAnchPoint.MIDDLE,
-                offset: new Vec2(0, 48 + 32),
-                size: new Vec2(0, 64),
-                text: "Retry",
-                clickCallback: () => {
-                    ScreenManager.setActiveScreen(ScreenManager.GAME_SCREEN);
-                },
-            }),
-        );
-        */
     }
 
-    draw(view: Viewport) {
+    draw() {
         ctx.fillStyle = "black";
         ctx.fillRect(0, 0, canvas.width, canvas.height);
-        super.draw(view);
+        super.draw();
     }
-    open(view: Viewport) {
-        this.draw(view);
+    open() {
+        this.draw();
     }
 }
 
@@ -156,14 +120,14 @@ export class GameScreen extends Screen {
 	this.appendChild(new UIScore(new Anchor(VerticalAnchor.TOP, HorizontalAnchor.MIDDLE), new Anchor(VerticalAnchor.TOP, HorizontalAnchor.MIDDLE), new Vec2(200, 100), new Vec2(-200, 10), () => { return Math.round(Game.level!.currency.owned.energy * 10) / 10 + "" }, "Yellow", "energy:"));
     }
 
-    open(_: Viewport) {
+    open() {
         Game.init();
         Game.doFrame();
     }
 
-    draw(view: Viewport) {
+    draw() {
         Game.doFrame();
-        super.draw(view);
+        super.draw();
     }
 
     mouseUpEvent(_: MouseEvent): void {

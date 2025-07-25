@@ -3,7 +3,7 @@
 import { Rect } from "./rectangle.js";
 import { Vec2 } from "./vector2.js";
 import { CapturableMouseEvent, ScreenManager } from "./screenManager.js";
-import { canvas, ctx, view, Viewport } from "./graphics.js";
+import { ctx, view } from "./graphics.js";
 
 /**
  * The vertical anchor point of an ui element
@@ -116,7 +116,7 @@ export abstract class UIElement extends IUIParent {
         this.size = size;
     }
 
-    abstract draw(view: Viewport): void;
+    abstract draw(): void;
 
     compute() {
 	// We take the position of where the anchor is in the parent element and offset it by the inner anchor.
@@ -154,7 +154,7 @@ export class UIText extends UIElement {
 	if(text !== null) this.resizeForTxt();
     }
 
-    override draw(_: Viewport) {
+    override draw() {
 	if(this.text !== null) {
 	    ctx.font = this.font;
 	    ctx.textBaseline = "middle";
@@ -197,7 +197,7 @@ export class UIButton extends UIText {
 		view.drawImageCropped(this.background, this.size.x - inset, this.size.y - inset, this.computedCenter!.x - this.size.x / 2 + inset / 2, this.computedCenter!.y - this.size.y / 2 + inset / 2, inset / 2, inset / 2);
 	    }
 	}
-        super.draw(view);
+        super.draw();
     }
 
     mouseMoveEvent(e: MouseEvent) {

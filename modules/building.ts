@@ -1,108 +1,118 @@
 import { loadTexture } from "./assetManagement.js";
 import { Resources } from "./currency.js";
 import { Enemy } from "./enemy.js";
-import { Entity, EntityType, EntityTypeArgs } from "./entity.js";
+import { Entity, EntityType } from "./entity.js";
 import { Game } from "./game.js";
-import { Viewport } from "./graphics.js";
+import { view, Viewport } from "./graphics.js";
 import { Vec2 } from "./vector2.js";
 
-export interface BuildingTypeArgs extends EntityTypeArgs {
+export interface BuildingTypeArgs {
     cost: Resources;
     generation: Resources;
+    entity_type: EntityType;
 }
 
-export class BuildingType extends EntityType {
+export class BuildingType {
     static HQ_TEXT = loadTexture("hq.png");
     static SOLAR_TEXT = loadTexture("solar_farm.png");
     static MINE_TEXT_EMPTY = loadTexture("quarry.png");
     static MINE_TEXT_FULL = loadTexture("quarry_mining.png");
 
-    cost: Resources;
-    generation: Resources;
+    public cost: Resources;
+    public generation: Resources;
+    public entity_type: EntityType;
 
     static HQ = new BuildingType({
-        size: new Vec2(40, 40),
-        doCollision: true,
-        hasHealth: true,
-        maxHealth: 100,
+	entity_type: {
+	    id: "building.hq",
+	    size: new Vec2(40, 40),
+	    doCollision: true,
+	    hasHealth: true,
+	    maxHealth: 100,
+	},
         cost: new Resources(0, 0),
         generation: new Resources(0, 0),
     });
 
     static SOLAR = new BuildingType({
-        size: new Vec2(50, 50),
-        doCollision: true,
-        hasHealth: false,
-        maxHealth: 100,
+	entity_type: {
+	    id: "building.solar",
+	    size: new Vec2(50, 50),
+	    doCollision: true,
+	    hasHealth: false,
+	    maxHealth: 100,
+	},
         cost: new Resources(10, 15),
         generation: new Resources(0.1, 0),
     });
 
     static MINE = new BuildingType({
-        size: new Vec2(10, 10),
-        doCollision: true,
-        hasHealth: true,
-        maxHealth: 50,
+	entity_type: {
+	    id: "building.mine",
+	    size: new Vec2(10, 10),
+	    doCollision: true,
+	    hasHealth: true,
+	    maxHealth: 50,
+	},
         cost: new Resources(0, 0),
         generation: new Resources(0, 0),
     });
 
     constructor(args: BuildingTypeArgs) {
-        super(args);
         this.cost = args.cost;
         this.generation = args.generation;
+	this.entity_type = args.entity_type;
     }
-
-    doCollisionResults() { }
 }
 
-export class Building
-    extends Entity<BuildingType> {
+export class Building extends Entity {
     static hurtCooldownMax = 5;
-    public hurtCooldown: number = 0;
 
-    static createDefault(): Building {
+    static create_building_husk(): Building {
         return new Building(0, 0, true, BuildingType.HQ, 0);
     }
 
-    public eType: BuildingType;
+    public hurtCooldown: number = 0;
+    public building_type: BuildingType;
 
     constructor(
         x: number,
         y: number,
         isCenter: boolean,
-        eType: BuildingType,
+        building_type: BuildingType,
         health: number,
     ) {
-        super(x, y, isCenter, eType, health);
-        this.eType = eType;
+        super(x, y, isCenter, building_type.entity_type, health);
+        this.building_type = building_type;
+    }
+
+    injectBuildingData(
+        x: number,
+        y: number,
+        isCenter: boolean,
+        building_type: BuildingType,
+        health: number,
+    ) {
+        this.injectEntityData(x, y, isCenter, building_type.entity_type, health);
+	this.building_type = building_type;
     }
 
     drawHealth(view: Viewport) {
-        if (this.eType.hasHealth) {
+        if (this.building_type.entity_type.hasHealth) {
             const gapY = 4;
             const thickness = 3;
 
             const offX = this.pos.x;
-            const offY = this.pos.y + this.eType.size.x + gapY;
-            const healthSize = (this.health / this.eType.maxHealth) * this.eType.size.x;
+            const offY = this.pos.y + this.building_type.entity_type.size.x + gapY;
+            const healthSize = (this.health / this.building_type.entity_type.maxHealth) * this.building_type.entity_type.size.x;
 
             view.fillRect(offX, offY, healthSize, thickness, "red");
         }
     }
 
-    injectData(
-        x: number,
-        y: number,
-        isCenter: boolean,
-        eType: BuildingType,
-        health: number,
-    ) {
-        this.injectEntityData(x, y, isCenter, eType, health);
-    }
 
-    draw(view: Viewport) {
-        switch (this.eType) {
+    draw() {
+        switch (this.building_type) {
             case BuildingType.SOLAR:
 		view.drawImage(BuildingType.SOLAR_TEXT, this.pos.x, this.pos.y);
                 this.drawHealth(view);
@@ -112,7 +122,7 @@ export class Building
                 this.drawHealth(view);
                 break;
             case BuildingType.MINE:
-                view.fillRect(this.pos.x, this.pos.y, this.eType.size.x, this.eType.size.y, "grey");
+                view.fillRect(this.pos.x, this.pos.y, this.building_type.entity_type.size.x, this.building_type.entity_type.size.y, "grey");
                 this.drawHealth(view);
                 break;
             default:
@@ -122,16 +132,16 @@ export class Building
 
     update(): void {
         this.hurtCooldown -= 1;
-        switch (this.eType) {
+        switch (this.building_type) {
             case BuildingType.MINE:
                 break;
             default:
-                Game.level!.currency.owned.add(this.eType.generation);
+                Game.level!.currency.owned.add(this.building_type.generation);
                 break;
         }
     }
 
-    doCollisionResults(e: Entity<any>): void {
+    doCollisionResults(e: Entity): void {
         if (e instanceof Enemy) {
             if (this.hurtCooldown <= 0) {
                 this.hurtCooldown = Building.hurtCooldownMax;

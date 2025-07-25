@@ -2,50 +2,49 @@
 
 import { Vec2 } from "./vector2.js";
 import { LevelDescriptor, Level } from "./level.js";
-import { canvas, view } from "./graphics.js";
+import { view } from "./graphics.js";
 import { GameScreen } from "./screen.js";
-import { passlog } from "./debug.js";
-import { BuildingType } from "./building.js";
 import { TowerType } from "./tower.js";
 
 export class Game {
     static level: Level | null = null;
     static screen: GameScreen | null = null;
-    static selBuildingType: BuildingType | null = null;
+    static selBuildingType: TowerType | null = null;
 
     static {
-	(window as any).enableCheatMode = function() {
-	    Game.level!.currency.owned.energy = Infinity;
-	    Game.level!.currency.owned.nilrun = Infinity;
-	};
+        (window as any).enableCheatMode = function() {
+            Game.level!.currency.owned.energy = Infinity;
+            Game.level!.currency.owned.nilrun = Infinity;
+        };
     }
 
     static placeTower() {
-        if (this.selBuildingType !== null && Game.level!.currency.owned.satisfies(this.selBuildingType.cost)) {
+
+        if (Game.selBuildingType !== null && Game.level!.currency.owned.satisfies(Game.selBuildingType.building_type.cost)) {
+            const tower_type = Game.selBuildingType;
+            const building_type = tower_type.building_type;
+            const entity_type = building_type.entity_type;
             const centerX = view.viewToWorldX(window.devicePixelRatio * this.screen!.lastMouseX);
             const centerY = view.viewToWorldY(window.devicePixelRatio * this.screen!.lastMouseY);
 
-            const topLeft = new Vec2(centerX - this.selBuildingType.size.x / 2, centerY - this.selBuildingType.size.y / 2);
+            const topLeft = new Vec2(centerX - entity_type.size.x / 2, centerY - entity_type.size.y / 2);
 
             for (const build of this.level!.buildings.alive) {
-                if (Vec2.doVectorSquaresIntersect(topLeft, this.selBuildingType.size, build.pos, build.eType.size)) {
+                if (Vec2.doVectorSquaresIntersect(topLeft, entity_type.size, build.pos, entity_type.size)) {
                     return;
                 }
             }
             for (const tow of this.level!.towers.alive) {
-                if (Vec2.doVectorSquaresIntersect(topLeft, this.selBuildingType.size, tow.pos, tow.eType.size)) {
+                if (Vec2.doVectorSquaresIntersect(topLeft, entity_type.size, tow.pos, tow.building_type.entity_type.size)) {
                     return;
                 }
             }
 
-            if (this.selBuildingType instanceof TowerType) {
-                this.level!.towers.reviveOrCreate().injectData(centerX, centerY, true, this.selBuildingType, this.selBuildingType.maxHealth);
-            } else {
-                this.level!.buildings.reviveOrCreate().injectData(centerX, centerY, true, this.selBuildingType, this.selBuildingType.maxHealth);
-            }
-
-            Game.level!.currency.owned.remove(this.selBuildingType.cost);
+            this.level!.towers.revive_or_create().injectTowerData(centerX, centerY, true, tower_type, entity_type.maxHealth);
+            console.log(entity_type.id);
+            Game.level!.currency.owned.remove(building_type.cost);
         }
+
     }
 
     static doFrame() {
@@ -64,23 +63,23 @@ export class Game {
 
     //checking if the mouse currently is over something that can be clicked on
     static checkMouseInteract(): boolean {
-	let posX = view.viewToWorldX(Game.screen!.lastMouseX * window.devicePixelRatio);
-	let posY = view.viewToWorldY(Game.screen!.lastMouseY * window.devicePixelRatio);
+        let posX = view.viewToWorldX(Game.screen!.lastMouseX * window.devicePixelRatio);
+        let posY = view.viewToWorldY(Game.screen!.lastMouseY * window.devicePixelRatio);
 
-	for(const enemy of Game.level!.towers) {
-	    const inside = enemy.is_point_inside(posX, posY);
-	    if(inside) {
-		console.log(enemy);
-		return true;
-	    }
-	}
-	return false;
+        for (const enemy of Game.level!.towers) {
+            const inside = enemy.is_point_inside(posX, posY);
+            if (inside) {
+                console.log(enemy);
+                return true;
+            }
+        }
+        return false;
     }
 
     static moveView(x: number, y: number) {
         if (Game.level !== null) {
             view.center.x -= x;
-	    view.center.y -= y;
+            view.center.y -= y;
         }
     }
 }
