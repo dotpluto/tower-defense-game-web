@@ -31,7 +31,7 @@ export class BuildingType {
 	    maxHealth: 100,
 	},
         cost: new Resources(0, 0),
-        generation: new Resources(0, 0),
+        generation: new Resources(0.1, 0),
     });
 
     static SOLAR = new BuildingType({
@@ -132,13 +132,7 @@ export class Building extends Entity {
 
     update(): void {
         this.hurtCooldown -= 1;
-        switch (this.building_type) {
-            case BuildingType.MINE:
-                break;
-            default:
-                Game.level!.currency.owned.add(this.building_type.generation);
-                break;
-        }
+	Game.level!.currency.owned.add(this.building_type.generation);
     }
 
     doCollisionResults(e: Entity): void {

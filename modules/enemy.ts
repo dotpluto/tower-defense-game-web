@@ -31,7 +31,7 @@ export class EnemyType {
             hasHealth: true,
             maxHealth: 10,
         },
-        reward: 10,
+        reward: 0.1,
         isArmored: false,
     });
     static BIG = new EnemyType({
@@ -42,7 +42,7 @@ export class EnemyType {
             hasHealth: true,
             maxHealth: 10,
         },
-        reward: 10,
+        reward: 1,
         isArmored: false,
     });
 }
@@ -153,7 +153,7 @@ export class Enemy extends Entity {
     doCollisionResults(oEntity: Entity): void {
         if (oEntity instanceof Projectile) {
             if (!this.markDead) {
-                Game.level!.currency.owned.nilrun += 0.1;
+                Game.level!.currency.owned.nilrun += this.enemy_type.reward;
             }
             this.markDead = true;
             oEntity.takeDamage();

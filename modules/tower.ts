@@ -40,7 +40,7 @@ export class TowerType {
         shootCooldownMax: 5,
         damage: 2,
         speed: 6,
-        range: 150,
+        range: 250,
 	bullet_type: ProjectileType.BALL,
     });
 
@@ -59,7 +59,7 @@ export class TowerType {
         shootCooldownMax: 30,
         damage: 6,
         speed: 6,
-        range: 300,
+        range: 400,
 	bullet_type: ProjectileType.BALL,
     });
 
@@ -176,6 +176,7 @@ export class Tower extends Building {
     }
 
     update() {
+	super.update();
         this.findTarget();
 
 	if(this.target !== null) {
