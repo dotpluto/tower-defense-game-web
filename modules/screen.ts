@@ -110,14 +110,18 @@ export class GameScreen extends Screen {
         super(true);
         Game.screen = this;
 
-	//buttons
-	this.appendChild(new UIButton(new Anchor(VerticalAnchor.BOTTOM, HorizontalAnchor.MIDDLE), new Anchor(VerticalAnchor.BOTTOM, HorizontalAnchor.MIDDLE), new Vec2(50, 50), null, () => { Game.selBuildingType = TowerType.MG}, loadTexture("mg_button.png"), new Vec2(-2.5 + -25, 0)));
-	this.appendChild(new UIButton(new Anchor(VerticalAnchor.BOTTOM, HorizontalAnchor.MIDDLE), new Anchor(VerticalAnchor.BOTTOM, HorizontalAnchor.MIDDLE), new Vec2(50, 50), null, () => { Game.selBuildingType = TowerType.SNIPER }, loadTexture("sniper_button.png"), new Vec2(2.5 + 25, 0)));
-	this.appendChild(new UIButton(new Anchor(VerticalAnchor.BOTTOM, HorizontalAnchor.MIDDLE), new Anchor(VerticalAnchor.BOTTOM, HorizontalAnchor.MIDDLE), new Vec2(50, 50), null, () => { Game.selBuildingType = TowerType.ROCKET }, loadTexture("rocket_button.png"), new Vec2(-7.5 + -75, 0)));
-	this.appendChild(new UIButton(new Anchor(VerticalAnchor.BOTTOM, HorizontalAnchor.MIDDLE), new Anchor(VerticalAnchor.BOTTOM, HorizontalAnchor.MIDDLE), new Vec2(50, 50), null, () => {  }, loadTexture("upgrade_reactor_button.png"), new Vec2(7.5 + 75, 0)));
+	let but_outside_anchor = new Anchor(VerticalAnchor.BOTTOM, HorizontalAnchor.MIDDLE);
+	let but_inside_anchor = new Anchor(VerticalAnchor.BOTTOM, HorizontalAnchor.MIDDLE);
+	
+	this.appendChild(new UIButton(but_outside_anchor, but_inside_anchor, new Vec2(50, 50), null, () => { Game.selBuildingType = TowerType.MG}, loadTexture("mg_button.png"), new Vec2(-2.5 + -25, 0)));
+	this.appendChild(new UIButton(but_outside_anchor, but_inside_anchor, new Vec2(50, 50), null, () => { Game.selBuildingType = TowerType.SNIPER }, loadTexture("sniper_button.png"), new Vec2(2.5 + 25, 0)));
+	this.appendChild(new UIButton(but_outside_anchor, but_inside_anchor, new Vec2(50, 50), null, () => { Game.selBuildingType = TowerType.ROCKET }, loadTexture("rocket_button.png"), new Vec2(-7.5 + -75, 0)));
+	this.appendChild(new UIButton(but_outside_anchor, but_inside_anchor, new Vec2(50, 50), null, () => { if(Game.level!.currency.owned.nilrun >= 10) { Game.level!.currency.income.energy += 0.005; Game.level!.currency.owned.nilrun -= 10; }}, loadTexture("upgrade_reactor_button.png"), new Vec2(7.5 + 75, 0)));
 	//scores
-	this.appendChild(new UIScore(new Anchor(VerticalAnchor.TOP, HorizontalAnchor.MIDDLE), new Anchor(VerticalAnchor.TOP, HorizontalAnchor.MIDDLE), new Vec2(200, 100), new Vec2(200, 10), () => { return Math.round(Game.level!.currency.owned.nilrun * 10) / 10 + "" }, "Green", "ore:"));
-	this.appendChild(new UIScore(new Anchor(VerticalAnchor.TOP, HorizontalAnchor.MIDDLE), new Anchor(VerticalAnchor.TOP, HorizontalAnchor.MIDDLE), new Vec2(200, 100), new Vec2(-200, 10), () => { return Math.round(Game.level!.currency.owned.energy * 10) / 10 + "" }, "Yellow", "energy:"));
+	let score_outside_anchor = new Anchor(VerticalAnchor.TOP, HorizontalAnchor.MIDDLE);
+	let score_inside_anchor = new Anchor(VerticalAnchor.TOP, HorizontalAnchor.MIDDLE);
+	this.appendChild(new UIScore(score_outside_anchor, score_inside_anchor, new Vec2(200, 100), new Vec2(200, 10), () => { return Math.round(Game.level!.currency.owned.nilrun * 10) / 10 + "" }, "Green", "ore:"));
+	this.appendChild(new UIScore(score_outside_anchor, score_inside_anchor, new Vec2(200, 100), new Vec2(-200, 10), () => { return Math.round(Game.level!.currency.owned.energy * 10) / 10 + "" }, "Yellow", "energy:"));
     }
 
     open() {
