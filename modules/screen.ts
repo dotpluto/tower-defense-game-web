@@ -6,13 +6,14 @@ import {
     HorizontalAnchor,
     UIButton,
     UIScore,
+    UIText,
 } from "./uiElement.js";
 import { Vec2 } from "./vector2.js";
 import { CapturableMouseEvent, ScreenManager } from "./screenManager.js";
 import { Game } from "./game.js";
 import { loadTexture } from "./assetManagement.js";
 import { TowerType } from "./tower.js";
-import { canvas, ctx } from "./graphics.js";
+import { canvas, ctx, view } from "./graphics.js";
 
 export abstract class Screen extends IUIParent {
     constructor(public liveRendering: boolean) {
@@ -69,8 +70,7 @@ export class StartScreen extends Screen {
     }
 
     draw() {
-        ctx.fillStyle = "Black";
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
+	view.clear("Black");
         super.draw();
     }
 
@@ -82,11 +82,12 @@ export class StartScreen extends Screen {
 export class EndScreen extends Screen {
     constructor() {
         super(false);
+	this.appendChild(new UIText(Anchor.MIDDLE, Anchor.MIDDLE, new Vec2(0, 0), new Vec2(0, 100), "You lost!", new Vec2(0, 0), "Red"));
+	this.appendChild(new UIButton(Anchor.MIDDLE, Anchor.MIDDLE, new Vec2(20, 80), "Play Again?", () => { ScreenManager.setActiveScreen(ScreenManager.GAME_SCREEN)}, "Red", new Vec2(0, 80)));
     }
 
     draw() {
-        ctx.fillStyle = "black";
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
+	view.clear("Black");
         super.draw();
     }
     open() {
@@ -132,6 +133,10 @@ export class GameScreen extends Screen {
     draw() {
         Game.doFrame();
         super.draw();
+	if(Game.screenToChangeTo !== null) {
+	    ScreenManager.setActiveScreen(Game.screenToChangeTo)
+	    Game.screenToChangeTo = null;
+	}
     }
 
     mouseUpEvent(_: MouseEvent): void {

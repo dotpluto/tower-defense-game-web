@@ -182,6 +182,7 @@ export class UIButton extends UIText {
     }
 
     draw() {
+	debugger;
 	const inset = 8;
 	if(!this.isHoveredOver) {
 	    if(typeof(this.background) === "object") {

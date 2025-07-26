@@ -60,19 +60,19 @@ export class ScreenManager {
         });
     }
 
-    static setActiveScreen(screen: Screen) {
-        screen.resizeEvent();
+    static setActiveScreen(new_screen: Screen) {
         this.activeScreen?.close();
         //cancelling old animation frame
         if (ScreenManager.lastAnimationFrame !== null) {
             window.cancelAnimationFrame(ScreenManager.lastAnimationFrame);
         }
 
-        ScreenManager.activeScreen = screen;
-        screen.open();
+        ScreenManager.activeScreen = new_screen;
+        new_screen.resizeEvent();
+        new_screen.open();
 
-        ScreenManager.continueRendering = screen.liveRendering;
-        if (screen.liveRendering === true) {
+        ScreenManager.continueRendering = new_screen.liveRendering;
+        if (new_screen.liveRendering === true) {
             ScreenManager.lastAnimationFrame = window.requestAnimationFrame(
                 ScreenManager.renderLoop,
             );

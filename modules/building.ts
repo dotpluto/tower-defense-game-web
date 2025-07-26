@@ -4,6 +4,7 @@ import { Enemy } from "./enemy.js";
 import { Entity, EntityType } from "./entity.js";
 import { Game } from "./game.js";
 import { view, Viewport } from "./graphics.js";
+import { ScreenManager } from "./screenManager.js";
 import { Vec2 } from "./vector2.js";
 
 export interface BuildingTypeArgs {
@@ -28,7 +29,7 @@ export class BuildingType {
 	    size: new Vec2(40, 40),
 	    doCollision: true,
 	    hasHealth: true,
-	    maxHealth: 100,
+	    maxHealth: 25,
 	},
         cost: new Resources(0, 0),
         generation: new Resources(0.1, 0),
@@ -139,9 +140,11 @@ export class Building extends Entity {
         if (e instanceof Enemy) {
             if (this.hurtCooldown <= 0) {
                 this.hurtCooldown = Building.hurtCooldownMax;
-                if (this.health > 0) {
                     this.health -= 1;
-                }
+		    if(this.health <= 0) {
+			Game.screenToChangeTo = ScreenManager.END_SCREEN;
+		    }
+
             }
         }
     }

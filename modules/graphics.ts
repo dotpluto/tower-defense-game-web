@@ -32,6 +32,11 @@ export class Viewport {
 	ctx.restore();
     }
 
+    clear(color: string) {
+	ctx.fillStyle = color;
+	ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+
     fillRect(left: number, top: number, w: number, h: number, color: string) {
         ctx.fillStyle = color;
         ctx.fillRect(Math.floor(this.worldToViewX(left)), Math.floor(this.worldToViewY(top)), w, h);

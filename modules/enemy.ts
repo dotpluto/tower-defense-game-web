@@ -1,3 +1,4 @@
+import { Building, BuildingType } from "./building.js";
 import { Entity, EntityType } from "./entity.js";
 import { Game } from "./game.js";
 import { view } from "./graphics.js";
@@ -163,6 +164,10 @@ export class Enemy extends Entity {
             diff.scale(1);
             this.vel.x -= diff.x;
             this.vel.y -= diff.y;
-        }
+        } else if (oEntity instanceof Building) {
+	    if(oEntity.building_type == BuildingType.HQ) {
+		this.markDead = true;
+	    }
+	}
     }
 }

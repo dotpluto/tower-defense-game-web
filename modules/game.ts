@@ -3,13 +3,15 @@
 import { Vec2 } from "./vector2.js";
 import { LevelDescriptor, Level } from "./level.js";
 import { view } from "./graphics.js";
-import { GameScreen } from "./screen.js";
+import { GameScreen, Screen } from "./screen.js";
 import { TowerType } from "./tower.js";
+import { ScreenManager } from "./screenManager.js";
 
 export class Game {
     static level: Level | null = null;
     static screen: GameScreen | null = null;
     static selBuildingType: TowerType | null = null;
+    static screenToChangeTo: Screen|null = null;
 
     static {
         (window as any).enableCheatMode = function() {
@@ -65,10 +67,9 @@ export class Game {
         let posX = view.viewToWorldX(Game.screen!.lastMouseX * window.devicePixelRatio);
         let posY = view.viewToWorldY(Game.screen!.lastMouseY * window.devicePixelRatio);
 
-        for (const enemy of Game.level!.towers) {
-            const inside = enemy.is_point_inside(posX, posY);
+        for (const tower of Game.level!.towers) {
+            const inside = tower.is_point_inside(posX, posY);
             if (inside) {
-                console.log(enemy);
                 return true;
             }
         }
