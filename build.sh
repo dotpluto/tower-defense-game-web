@@ -33,6 +33,7 @@ if [ -n ${cleanup_list:+"notempty"} ]; then
 	test #nop because bash doesn't like empty if blocks
 fi
 
+
 #individual files
 cp ./*.html ${DEV_WEBROOT}
 cp ./*.css ${DEV_WEBROOT}
@@ -42,5 +43,8 @@ cp -r ./assets/ ${DEV_WEBROOT}
 
 tsc_message=$(tsc --outDir ${DEV_WEBROOT} --pretty)
 if [ -n "$tsc_message" ]; then
+    echo -e "\nErrors occured."
     echo "$tsc_message" | less -R
+else
+    echo -e "\nDone compiling."
 fi
