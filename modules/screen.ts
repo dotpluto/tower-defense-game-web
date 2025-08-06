@@ -13,7 +13,7 @@ import { CapturableMouseEvent, ScreenManager } from "./screenManager.js";
 import { Game } from "./game.js";
 import { loadTexture } from "./assetManagement.js";
 import { TowerType } from "./tower.js";
-import { canvas, ctx, view } from "./graphics.js";
+import { canvas, view } from "./graphics.js"
 
 export abstract class Screen extends IUIParent {
     constructor(public liveRendering: boolean) {
@@ -117,7 +117,7 @@ export class GameScreen extends Screen {
 	this.appendChild(new UIButton(but_outside_anchor, but_inside_anchor, new Vec2(50, 50), null, () => { Game.selBuildingType = TowerType.MG}, loadTexture("mg_button.png"), new Vec2(-2.5 + -25, 0)));
 	this.appendChild(new UIButton(but_outside_anchor, but_inside_anchor, new Vec2(50, 50), null, () => { Game.selBuildingType = TowerType.SNIPER }, loadTexture("sniper_button.png"), new Vec2(2.5 + 25, 0)));
 	this.appendChild(new UIButton(but_outside_anchor, but_inside_anchor, new Vec2(50, 50), null, () => { Game.selBuildingType = TowerType.ROCKET }, loadTexture("rocket_button.png"), new Vec2(-7.5 + -75, 0)));
-	this.appendChild(new UIButton(but_outside_anchor, but_inside_anchor, new Vec2(50, 50), null, () => { if(Game.level!.currency.owned.nilrun >= 10) { Game.level!.currency.income.energy += 0.005; Game.level!.currency.owned.nilrun -= 10; }}, loadTexture("upgrade_reactor_button.png"), new Vec2(7.5 + 75, 0)));
+	this.appendChild(new UIButton(but_outside_anchor, but_inside_anchor, new Vec2(50, 50), null, () => { if(Game.level!.currency.owned.nilrun >= 10) { Game.level!.currency.income.energy += 0.001; Game.level!.currency.owned.nilrun -= 10; }}, loadTexture("upgrade_reactor_button.png"), new Vec2(7.5 + 75, 0)));
 	//scores
 	let score_outside_anchor = new Anchor(VerticalAnchor.TOP, HorizontalAnchor.MIDDLE);
 	let score_inside_anchor = new Anchor(VerticalAnchor.TOP, HorizontalAnchor.MIDDLE);

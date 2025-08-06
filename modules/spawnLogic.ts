@@ -4,62 +4,71 @@ import { Game } from "./game.js";
 import { EnemyType } from "./enemy.js";
 
 export class SpawnMan {
-	static maxTimer: number = 100;
-	public timer: number = 0;
+    static SPAWN_TIMER_MAX = 100;
+    public spawn_timer = 0;
+    public enemies_per_wave = 1;
 
-	update() {
-		if(this.timer <= 0) {
-			this.spawnEnemy();
-			this.timer = SpawnMan.maxTimer - Game.level!.frameCount / 50;
-		} else {
-			this.timer -= 1;
-		}
+    update() {
+        this.enemies_per_wave += 0.0025;
+        if (this.spawn_timer <= 0) {
+            this.spawn_enemies();
+            this.spawn_timer = SpawnMan.SPAWN_TIMER_MAX;
+        } else {
+	    this.spawn_timer -= 1;
+        }
+    }
+    
+    spawn_enemies() {
+	let enemy_num = Math.floor(this.enemies_per_wave);
+	for(;enemy_num > 0; enemy_num -= 1) {
+	    this.spawn_enemy();
 	}
+    }
 
-	spawnEnemy() {
-		let side = Math.floor((Math.random() * 4));
-		
-		let x, y;
-		x = 0;
-		y = 0;
+    spawn_enemy() {
+        let side = Math.floor((Math.random() * 4));
 
-		switch (side) {
-			case 0: //top
-				x = this.getRandomWidthPos();
-				y = -Game.level!.desc.size.y / 2;
-				break;
-			case 1: //right
-				x = Game.level!.desc.size.x / 2;
-				y = this.getRandomHeightPos();
-				break;
-			case 2: //bottom
-				x = this.getRandomWidthPos();
-				y = Game.level!.desc.size.y / 2;
-				break;
-			case 3: //left
-				x = -Game.level!.desc.size.x / 2;
-				y = this.getRandomHeightPos();
-				break;
-		}
+        let x, y;
+        x = 0;
+        y = 0;
 
-		Game.level!.enemies.revive_or_create().injectEnemyData(x, y, true, EnemyType.SMALL, EnemyType.SMALL.entity_type.maxHealth);
-	}
+        switch (side) {
+            case 0: //top
+                x = this.getRandomWidthPos();
+                y = -Game.level!.desc.size.y / 2;
+                break;
+            case 1: //right
+                x = Game.level!.desc.size.x / 2;
+                y = this.getRandomHeightPos();
+                break;
+            case 2: //bottom
+                x = this.getRandomWidthPos();
+                y = Game.level!.desc.size.y / 2;
+                break;
+            case 3: //left
+                x = -Game.level!.desc.size.x / 2;
+                y = this.getRandomHeightPos();
+                break;
+        }
 
-	getRandomBuilding(level: Level): Entity {
-		const buildingCount = level.towers.alive.length + level.buildings.alive.length;
-		const buildInd = Math.floor(buildingCount * Math.random());
-		if(buildInd < level.towers.alive.length) {
-			return level.towers.alive[buildInd];
-		} else {
-			return level.buildings.alive[buildInd - level.towers.alive.length];
-		}
-	}
+        Game.level!.enemies.revive_or_create().injectEnemyData(x, y, true, EnemyType.SMALL, EnemyType.SMALL.entity_type.maxHealth);
+    }
 
-	getRandomWidthPos() {
-		return Math.random() * Game.level!.desc.size.x - Game.level!.desc.size.x / 2;
-	}
+    getRandomBuilding(level: Level): Entity {
+        const buildingCount = level.towers.alive.length + level.buildings.alive.length;
+        const buildInd = Math.floor(buildingCount * Math.random());
+        if (buildInd < level.towers.alive.length) {
+            return level.towers.alive[buildInd];
+        } else {
+            return level.buildings.alive[buildInd - level.towers.alive.length];
+        }
+    }
 
-	getRandomHeightPos() {
-		return Math.random() * Game.level!.desc.size.y - Game.level!.desc.size.y / 2;
-	}
+    getRandomWidthPos() {
+        return Math.random() * Game.level!.desc.size.x - Game.level!.desc.size.x / 2;
+    }
+
+    getRandomHeightPos() {
+        return Math.random() * Game.level!.desc.size.y - Game.level!.desc.size.y / 2;
+    }
 }

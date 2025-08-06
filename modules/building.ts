@@ -32,7 +32,7 @@ export class BuildingType {
 	    maxHealth: 25,
 	},
         cost: new Resources(0, 0),
-        generation: new Resources(0.1, 0),
+        generation: new Resources(0.025, 0),
     });
 
     static SOLAR = new BuildingType({
