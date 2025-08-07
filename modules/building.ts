@@ -137,12 +137,14 @@ export class Building extends Entity {
     }
 
     doCollisionResults(e: Entity): void {
-        if (e instanceof Enemy) {
+        if (this.building_type.entity_type.id === "building.hq" && e instanceof Enemy) {
             if (this.hurtCooldown <= 0) {
                 this.hurtCooldown = Building.hurtCooldownMax;
                     this.health -= 1;
 		    if(this.health <= 0) {
-			Game.screenToChangeTo = ScreenManager.END_SCREEN;
+			if(!(window as any).is_cheat_mode_enabled) {
+			    Game.screenToChangeTo = ScreenManager.END_SCREEN;
+			}
 		    }
 
             }
