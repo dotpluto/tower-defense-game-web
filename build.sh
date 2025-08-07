@@ -46,5 +46,5 @@ if [ -n "$tsc_message" ]; then
     echo -e "\nErrors occured."
     echo "$tsc_message" | less -R
 else
-    echo -e "\nDone compiling."
+    echo -e "\nDone building."
 fi
