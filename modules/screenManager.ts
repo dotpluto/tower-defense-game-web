@@ -2,6 +2,8 @@
 
 import { Screen, StartScreen, GameScreen, EndScreen } from "./screen.js";
 import { canvas } from "./graphics.js";
+import { get_element } from "./debug.js";
+import { Game } from "./game.js";
 
 export class ScreenManager {
     static halveFps: boolean;

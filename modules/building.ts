@@ -1,5 +1,6 @@
 import { loadTexture } from "./assetManagement.js";
 import { Resources } from "./currency.js";
+import { ExtendedWindow } from "./debug.js";
 import { Enemy } from "./enemy.js";
 import { Entity, EntityType } from "./entity.js";
 import { Game } from "./game.js";
@@ -142,8 +143,9 @@ export class Building extends Entity {
                 this.hurtCooldown = Building.hurtCooldownMax;
                     this.health -= 1;
 		    if(this.health <= 0) {
-			if(!(window as any).is_cheat_mode_enabled) {
-			    Game.screenToChangeTo = ScreenManager.END_SCREEN;
+			this.health = 1;
+			if(!(window as unknown as ExtendedWindow).debug_tools.disable_death) {
+			    Game.screenToChangeTo = ScreenManager.START_SCREEN;
 			}
 		    }
 

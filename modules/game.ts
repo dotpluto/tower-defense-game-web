@@ -6,6 +6,7 @@ import { view } from "./graphics.js";
 import { GameScreen, Screen } from "./screen.js";
 import { TowerType } from "./tower.js";
 import { ScreenManager } from "./screenManager.js";
+import { ExtendedWindow } from "./debug.js";
 
 export class Game {
     static level: Level | null = null;
@@ -13,21 +14,10 @@ export class Game {
     static selBuildingType: TowerType | null = null;
     static screenToChangeTo: Screen|null = null;
 
-    static {
-        (window as any).enableCheatMode = function() {
-	    if((window as any).is_cheat_mode_enabled) {
-		Game.level!.currency.owned.energy = Infinity;
-		Game.level!.currency.owned.nilrun = Infinity;
-		(window as any).is_cheat_mode_enabled = true;
-	    } else {
-		(window as any).is_cheat_mode_enabled = false;
-	    }
-        };
-    }
-
     static placeTower() {
 
-        if (Game.selBuildingType !== null && Game.level!.currency.owned.satisfies(Game.selBuildingType.building_type.cost)) {
+        if (Game.selBuildingType !== null &&
+	    (Game.level!.currency.owned.satisfies(Game.selBuildingType.building_type.cost) || (window as unknown as ExtendedWindow).debug_tools.free_build)) {
             const tower_type = Game.selBuildingType;
             const building_type = tower_type.building_type;
             const entity_type = building_type.entity_type;
@@ -48,7 +38,9 @@ export class Game {
             }
 
             this.level!.towers.revive_or_create().injectTowerData(centerX, centerY, true, tower_type, entity_type.maxHealth);
-            Game.level!.currency.owned.remove(building_type.cost);
+	    if(!(window as unknown as ExtendedWindow).debug_tools.free_build) {
+		Game.level!.currency.owned.remove(building_type.cost);
+	    }
         }
 
     }
