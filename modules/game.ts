@@ -15,8 +15,13 @@ export class Game {
 
     static {
         (window as any).enableCheatMode = function() {
-            Game.level!.currency.owned.energy = Infinity;
-            Game.level!.currency.owned.nilrun = Infinity;
+	    if((window as any).is_cheat_mode_enabled) {
+		Game.level!.currency.owned.energy = Infinity;
+		Game.level!.currency.owned.nilrun = Infinity;
+		(window as any).is_cheat_mode_enabled = true;
+	    } else {
+		(window as any).is_cheat_mode_enabled = false;
+	    }
         };
     }
 
