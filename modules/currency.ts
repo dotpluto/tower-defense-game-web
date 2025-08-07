@@ -1,14 +1,27 @@
+import { get_element } from "./debug.js";
+
 export class CurrencyManager {
 	public owned: Resources;
 	public income: Resources;
+	public energy_span: HTMLSpanElement;
+	public ore_span: HTMLSpanElement;
 
     constructor(energy: number, ore: number) {
 		this.owned = new Resources(energy, ore);
 		this.income = new Resources(0, 0);
+		this.energy_span = get_element("energySpan", HTMLSpanElement);
+		this.ore_span = get_element("oreSpan", HTMLSpanElement);
     }
 
     update() {
 	this.owned.add(this.income);
+    }
+
+    update_graphics() {
+	let rounded_energy = Math.floor(this.owned.energy * 10) / 10;
+	let rounded_ore = Math.floor(this.owned.nilrun * 10) / 10;
+	this.energy_span.innerHTML = rounded_energy.toString()
+	this.ore_span.innerHTML = rounded_ore.toString()
     }
 }
 

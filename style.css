@@ -1,3 +1,8 @@
+@font-face {
+    font-family: "MainFont";
+    src: url("assets/fonts/Orbitron-Regular.ttf");
+}
+
 html {
     height: 100%;
     overflow: hidden;
@@ -9,9 +14,130 @@ body {
     height: 100%;
     width: 100%;
     margin: 0px;
+    font-family: "MainFont";
+    color: red;
+    font-size: 28px;
+    text-wrap: nowrap;
+}
+
+button {
+    font-family: "MainFont";
+    background-color: red;
+    border: 1px solid red;
+    pointer-events: all;
+}
+
+button:hover {
+    border: 1px solid white;
+}
+
+button.big-button {
+    height: 48px;
+    font-size: 28px;
+}
+
+button.play-button {
+    width: 100px;
+}
+
+button.play-again-button {
+    width: 200px;
 }
 
 canvas {
     height: 100%;
     width: 100%;
+}
+
+.container {
+    height: 100%;
+    width: 100%;
+}
+
+.container > * {
+    position: absolute;
+}
+
+.expand {
+    width: 100%;
+    height: 100%;
+}
+
+.center-div {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+}
+
+.game-screen {
+    pointer-events: none;
+    flex-direction: column;
+    display: flex;
+    justify-items: stretch;
+}
+
+.resource-bar {
+    padding-top: 10px;
+    height: 24px;
+    display: flex;
+    justify-content: left;
+    font-size: 12px;
+    div {
+	display: flex;
+	align-items: center;
+	overflow: hidden;
+	padding-left: 10px;
+	width: 60px;
+	img {
+	    min-width: 12px;
+	    min-height: 12px;
+	}
+	span {
+	    padding-left: 2.5px;
+	}
+    }
+}
+
+.building-selection {
+    display: flex;
+    flex-grow: 1;
+    flex-direction: column-reverse;
+    div {
+	height: auto;
+	flex: flex-grow;
+	display: flex;
+	justify-content: center;
+	align-items: flex-end;
+	button {
+	    margin-left: 2px;
+	    margin-right: 2px;
+	    max-width: 25px;
+	    max-height: 25px;
+	    width: 25px;
+	    height: 25px;
+	    padding: 0;
+	    img {
+		width: 100%;
+		height: 100%;
+	    }
+	}
+    }
+}
+
+#energySpan {
+    color: yellow;
+}
+
+#oreSpan {
+    color: green;
+}
+.column {
+    display: flex;
+    flex-direction: column;
+}
+
+.collapse {
+    align-items: left;
+    justify-content: top;
 }

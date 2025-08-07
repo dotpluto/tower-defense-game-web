@@ -14,10 +14,24 @@ import { Game } from "./game.js";
 import { loadTexture } from "./assetManagement.js";
 import { TowerType } from "./tower.js";
 import { canvas, view } from "./graphics.js"
+import { get_element } from "./debug.js";
 
 export abstract class Screen extends IUIParent {
-    constructor(public liveRendering: boolean) {
+    public ui_div: HTMLDivElement;
+
+    constructor(public liveRendering: boolean, ui_div_id: string) {
         super();
+	let ui_div = document.getElementById(ui_div_id);
+	if(ui_div === null) {
+	    throw Error(`Didn't find any ui div with id ${ui_div_id}.`);
+	} else if(!(ui_div instanceof HTMLDivElement)) {
+	    throw Error(`The element with id ${ui_div_id} is not a div.`);
+	}
+	this.ui_div = ui_div;
+    }
+
+    register_click_handler(button_id: string, onclick: () => void) {
+	get_element(button_id, HTMLButtonElement).onclick = onclick;
     }
 
     draw() {
@@ -26,8 +40,13 @@ export abstract class Screen extends IUIParent {
         });
     }
 
-    open() { }
-    close() { }
+    open() {
+	this.ui_div.style.visibility = "visible";
+    }
+
+    close() {
+	this.ui_div.style.visibility = "hidden";
+    }
 
     //event passdowns
     mouseMoveEvent(event: MouseEvent) {
@@ -65,8 +84,10 @@ export abstract class Screen extends IUIParent {
 
 export class StartScreen extends Screen {
     constructor() {
-        super(false);
-        this.appendChild(new UIButton(new Anchor(VerticalAnchor.MIDDLE, HorizontalAnchor.MIDDLE), new Anchor(VerticalAnchor.MIDDLE, HorizontalAnchor.MIDDLE), new Vec2(100, 120), "Play", () => { ScreenManager.setActiveScreen(ScreenManager.GAME_SCREEN) }, "Red", new Vec2(0, 0)));
+        super(false, "startScreen");
+	this.register_click_handler("playButton", () => {
+	    ScreenManager.setActiveScreen(ScreenManager.GAME_SCREEN);
+	})
     }
 
     draw() {
@@ -75,15 +96,17 @@ export class StartScreen extends Screen {
     }
 
     open() {
+	super.open();
         this.draw();
     }
 }
 
 export class EndScreen extends Screen {
     constructor() {
-        super(false);
-	this.appendChild(new UIText(Anchor.MIDDLE, Anchor.MIDDLE, new Vec2(0, 0), new Vec2(0, 100), "You lost!", new Vec2(0, 0), "Red"));
-	this.appendChild(new UIButton(Anchor.MIDDLE, Anchor.MIDDLE, new Vec2(20, 80), "Play Again?", () => { ScreenManager.setActiveScreen(ScreenManager.GAME_SCREEN)}, "Red", new Vec2(0, 80)));
+        super(false, "endScreen");
+	this.register_click_handler("playAgainButton", () => {
+	    ScreenManager.setActiveScreen(ScreenManager.START_SCREEN)
+	})
     }
 
     draw() {
@@ -91,6 +114,7 @@ export class EndScreen extends Screen {
         super.draw();
     }
     open() {
+	super.open();
         this.draw();
     }
 }
@@ -108,24 +132,29 @@ export class GameScreen extends Screen {
     lastMouseY: number = 0;
 
     constructor() {
-        super(true);
+        super(true, "gameScreen");
         Game.screen = this;
 
-	let but_outside_anchor = new Anchor(VerticalAnchor.BOTTOM, HorizontalAnchor.MIDDLE);
-	let but_inside_anchor = new Anchor(VerticalAnchor.BOTTOM, HorizontalAnchor.MIDDLE);
-	
-	this.appendChild(new UIButton(but_outside_anchor, but_inside_anchor, new Vec2(50, 50), null, () => { Game.selBuildingType = TowerType.MG}, loadTexture("mg_button.png"), new Vec2(-2.5 + -25, 0)));
-	this.appendChild(new UIButton(but_outside_anchor, but_inside_anchor, new Vec2(50, 50), null, () => { Game.selBuildingType = TowerType.SNIPER }, loadTexture("sniper_button.png"), new Vec2(2.5 + 25, 0)));
-	this.appendChild(new UIButton(but_outside_anchor, but_inside_anchor, new Vec2(50, 50), null, () => { Game.selBuildingType = TowerType.ROCKET }, loadTexture("rocket_button.png"), new Vec2(-7.5 + -75, 0)));
-	this.appendChild(new UIButton(but_outside_anchor, but_inside_anchor, new Vec2(50, 50), null, () => { if(Game.level!.currency.owned.nilrun >= 10) { Game.level!.currency.income.energy += 0.001; Game.level!.currency.owned.nilrun -= 10; }}, loadTexture("upgrade_reactor_button.png"), new Vec2(7.5 + 75, 0)));
-	//scores
-	let score_outside_anchor = new Anchor(VerticalAnchor.TOP, HorizontalAnchor.MIDDLE);
-	let score_inside_anchor = new Anchor(VerticalAnchor.TOP, HorizontalAnchor.MIDDLE);
-	this.appendChild(new UIScore(score_outside_anchor, score_inside_anchor, new Vec2(200, 100), new Vec2(200, 10), () => { return Math.round(Game.level!.currency.owned.nilrun * 10) / 10 + "" }, "Green", "ore:"));
-	this.appendChild(new UIScore(score_outside_anchor, score_inside_anchor, new Vec2(200, 100), new Vec2(-200, 10), () => { return Math.round(Game.level!.currency.owned.energy * 10) / 10 + "" }, "Yellow", "energy:"));
+	this.register_click_handler("upgradeReactorButton", () => {
+	    if(Game.level!.currency.owned.nilrun >= 10) {
+		Game.level!.currency.income.energy += 0.001;
+		Game.level!.currency.owned.nilrun -= 10;
+	    }
+	})
+
+	this.register_click_handler("mgButton", () => {
+	    Game.selBuildingType = TowerType.MG;
+	})
+	this.register_click_handler("rocketButton", () => {
+	    Game.selBuildingType = TowerType.ROCKET;
+	})
+	this.register_click_handler("sniperButton", () => {
+	    Game.selBuildingType = TowerType.SNIPER;
+	})
     }
 
     open() {
+	super.open();
         Game.init();
         Game.doFrame();
     }

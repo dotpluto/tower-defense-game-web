@@ -43,6 +43,12 @@ export class ScreenManager {
 
         canvas.addEventListener("mouseleave", (event) => {
             ScreenManager.activeScreen?.mouseLeaveEvent(event);
+	    Game.is_blueprint_disabled = true;
+        });
+
+        canvas.addEventListener("mouseenter", (event) => {
+            ScreenManager.activeScreen?.mouseLeaveEvent(event);
+	    Game.is_blueprint_disabled = false;
         });
 
         canvas.addEventListener("mousemove", (event) => {

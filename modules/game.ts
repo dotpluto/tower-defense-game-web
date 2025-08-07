@@ -13,6 +13,7 @@ export class Game {
     static screen: GameScreen | null = null;
     static selBuildingType: TowerType | null = null;
     static screenToChangeTo: Screen|null = null;
+    static is_blueprint_disabled: boolean = false;
 
     static placeTower() {
 

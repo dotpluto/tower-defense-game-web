@@ -10,6 +10,34 @@
 		<link rel="stylesheet" href="style.css" defer></link>
 	</head>
 	<body style="visibility: hidden">
+	    <div class="container" id="container">
 		<canvas id="canvas"></canvas>
+		<div id="startScreen" class="center-div expand" style="visibility: hidden;">
+		    <button id="playButton" class="play-button big-button">Play</button>
+		</div>
+		<div id="endScreen" class="center-div expand" style="visibility: hidden;">
+		    <small style="text-color:red">You lost!</small>
+		    <button id="playAgainButton" class="play-again-button big-button">Play Again</button>
+		</div>
+		<div id="gameScreen" class="expand game-screen" style="visibility: hidden;">
+		    <div class="resource-bar">
+			<div>
+			    <img></img><span id="energySpan">5000</span>
+			</div>
+			<div>
+			    <img></img><span id="oreSpan">5000</span>
+			</div>
+		    </div>
+		    <div class="building-selection">
+			<div class="expand">
+			    <button id="sniperButton"><img src="./assets/textures/sniper_button.png"></img></button>
+			    <button id="mgButton"><img src="./assets/textures/mg_button.png"></img></button>
+			    <button id="rocketButton"><img src="./assets/textures/rocket_button.png"></img></button>
+			    <button id="upgradeReactorButton"><img src="./assets/textures/upgrade_reactor_button.png"></img></button>
+			</div>
+		    </div>
+		</div>
+		
+	    </div>
 	</body>
 </html>

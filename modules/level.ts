@@ -37,10 +37,11 @@ export class Level {
     }
 
     draw() {
-        ctx.fillStyle = this.desc.color;
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
+	view.clear(this.desc.color);
 
         //this.cm.debugDraw(this);
+
+	this.currency.update_graphics();
 
         //updating
         this.buildings.draw();
@@ -48,7 +49,7 @@ export class Level {
         this.enemies.draw();
         this.projectiles.draw();
 
-        if (Game.selBuildingType !== null) {
+        if (Game.selBuildingType !== null && !Game.is_blueprint_disabled) {
 	    const worldX = view.viewToWorldX(Game.screen!.lastMouseX * window.devicePixelRatio);
 	    const worldY = view.viewToWorldY(Game.screen!.lastMouseY * window.devicePixelRatio);
 
