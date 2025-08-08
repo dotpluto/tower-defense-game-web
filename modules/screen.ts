@@ -145,9 +145,9 @@ export class GameScreen extends Screen {
 	this.register_click_handler("mgButton", () => {
 	    Game.selBuildingType = TowerType.MG;
 	})
-	this.register_click_handler("rocketButton", () => {
-	    Game.selBuildingType = TowerType.ROCKET;
-	})
+	// this.register_click_handler("rocketButton", () => {
+	//     Game.selBuildingType = TowerType.ROCKET;
+	// })
 	this.register_click_handler("sniperButton", () => {
 	    Game.selBuildingType = TowerType.SNIPER;
 	})
