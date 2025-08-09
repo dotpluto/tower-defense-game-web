@@ -1,7 +1,7 @@
 "use strict";
 
 import { Vec2 } from "./vector2.js";
-import { CollisionMap } from "./physics.js";
+import { CollisionMap, SectionData } from "./physics.js";
 import { } from "./level.js";
 import { EffArray, fastDelete } from "./util.js";
 
@@ -38,7 +38,7 @@ export abstract class Entity {
     public entity_type: EntityType;
     public health: number;
 
-    public sections: Entity[][] = []; //collision map sectors of current pass
+    public sections: SectionData[] = []; //collision map sectors of current pass
 
     constructor(
         x: number,
@@ -90,7 +90,7 @@ export abstract class Entity {
         checkedEntities.add(this);
 
         for (const section of this.sections) {
-            for (const entity of section) {
+            for (const entity of section.entities) {
                 if (checkedEntities.has(entity)) {
                     continue;
                 }
@@ -153,7 +153,7 @@ export class EntityList<T extends Entity> {
 
     add_to_cm(cm: CollisionMap) {
         for (let alive of this.alive) {
-            cm.add(alive);
+            cm.add_entity(alive);
         }
     }
 

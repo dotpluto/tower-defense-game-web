@@ -1,9 +1,21 @@
+import { do_rect_and_circle_collide } from "./collision.js";
 import { Entity } from "./entity.js";
 import { ctx, view } from "./graphics.js";
 import { Level } from "./level";
+import { Tower } from "./tower.js";
 
 //section count
 const sectionSizeHint = 100; //the wanted chunk size
+
+export class SectionData {
+    public entities: Entity[];
+    public turrets: Set<Tower>;
+
+    constructor() {
+        this.entities = [];
+        this.turrets = new Set();
+    }
+}
 
 /*
  * 2d array of squares to save collsion time
@@ -11,6 +23,11 @@ const sectionSizeHint = 100; //the wanted chunk size
  * Chunks range from -x to x where x is the total chunk number divided by two.
  */
 export class CollisionMap {
+    static return_origin_chunk_x: number = 0;
+    static return_origin_chunk_y: number = 0;
+    static return_chunk_num_x: number = 0;
+    static return_chunk_num_y: number = 0;
+
     //how many chunks there are per axis
     chNumX: number;
     chNumY: number;
@@ -19,91 +36,119 @@ export class CollisionMap {
     chSizeX: number;
     chSizeY: number;
 
-    columns: Entity[][][];
+    section_grid: SectionData[][];
 
     constructor(public mapWidth: number, public mapHeight: number) {
         //determininig size and making it divisible by two
         this.chNumX = Math.ceil(mapWidth / sectionSizeHint);
-		if(this.chNumX % 2 === 1) {
-			this.chNumX += 1;
-		}
+        if (this.chNumX % 2 === 1) {
+            this.chNumX += 1;
+        }
         this.chNumY = Math.ceil(mapHeight / sectionSizeHint);
-		if(this.chNumY % 2 === 1) {
-			this.chNumY += 1;
-		}
+        if (this.chNumY % 2 === 1) {
+            this.chNumY += 1;
+        }
 
         this.chSizeX = mapWidth / this.chNumX;
         this.chSizeY = mapHeight / this.chNumY;
 
-        this.columns = [];
+        this.section_grid = [];
         for (let i = 0; i < this.chNumX; i++) {
-            this.columns.push([]);
+            let rows = [];
+            for (let j = 0; j < this.chNumY; j++) {
+                rows.push(new SectionData());
+            }
+            this.section_grid.push(rows);
         }
-		this.reset();
+
     }
 
     reset() {
         for (let x = 0; x < this.chNumX; x++) {
             for (let y = 0; y < this.chNumY; y++) {
-                this.columns[x][y] = [];
+                this.section_grid[x][y].entities = [];
             }
         }
     }
 
-    add(entity: Entity) {
-        //clearing old
+    add_entity(entity: Entity) {
         entity.sections = [];
 
-        const topLeft = entity.pos;
-        const size = entity.entity_type.size;
+        this.get_chunks_in_rect(entity.pos.x, entity.pos.y, entity.entity_type.size.x, entity.entity_type.size.y);
+
+        for (let x = 0; x < CollisionMap.return_chunk_num_x; x++) {
+            for (let y = 0; y < CollisionMap.return_chunk_num_y; y++) {
+                let ch_x = x + CollisionMap.return_origin_chunk_x;
+                let ch_y = y + CollisionMap.return_origin_chunk_y;
+                if (this.does_chunk_exist(ch_x, ch_y)) {
+                    this.section_grid[ch_x][ch_y].entities.push(entity);
+                    entity.sections.push(this.section_grid[ch_x][ch_y]);
+                }
+            }
+        }
+    }
+
+    public add_tower(tower: Tower) {
+	let tower_center_x = tower.pos.x + tower.entity_type.size.x / 2;
+	let tower_center_y = tower.pos.y + tower.entity_type.size.y / 2;
+        this.get_chunks_in_rect(tower_center_x - tower.tower_type.range, tower_center_y - tower.tower_type.range, tower.tower_type.range * 2, tower.tower_type.range * 2);
+        for (let x = 0; x < CollisionMap.return_chunk_num_x; x++) {
+            for (let y = 0; y < CollisionMap.return_chunk_num_y; y++) {
+                let ch_x = x + CollisionMap.return_origin_chunk_x;
+                let ch_y = y + CollisionMap.return_origin_chunk_y;
+                if (this.does_chunk_exist(ch_x, ch_y) &&
+                    do_rect_and_circle_collide(tower_center_x,
+                        tower_center_y,
+                        tower.tower_type.range,
+                        this.get_chunk_pos_x(ch_x),
+                        this.get_chunk_pos_y(ch_y),
+                        this.chSizeX,
+                        this.chSizeY
+			
+                    )
+                ) {
+                    this.section_grid[ch_x][ch_y].turrets.add(tower);
+                }
+            }
+        }
+    }
+
+    public does_chunk_exist(x: number, y: number) {
+        return x >= 0 && x < this.chNumX && y >= 0 && y < this.chNumY;
+    }
+
+    public get_chunks_in_rect(x: number, y: number, width: number, height: number) {
+
+        CollisionMap.return_origin_chunk_x = this.getChunkFromPointX(x);
+        CollisionMap.return_origin_chunk_y = this.getChunkFromPointY(y);
 
         //the smallest an enemy can be is a point so it must occupy at least one chunk
-        let chunkBoxW = 1;
-        let chunkBoxH = 1;
+        let occupied_chunks_x = 1;
+        let occupied_chunks_y = 1;
 
-        const firstChunkX = this.getChunkFromPointX(topLeft.x);
-        const firstChunkY = this.getChunkFromPointY(topLeft.y);
 
-        chunkBoxW += Math.floor(size.x / this.chSizeX);
-        chunkBoxH += Math.floor(size.y / this.chSizeY);
+        occupied_chunks_x += Math.floor(width / this.chSizeX);
+        occupied_chunks_y += Math.floor(height / this.chSizeY);
 
         const leftFlipped =
-            topLeft.x < 0
-                ? this.chSizeX - Math.abs(topLeft.x % this.chSizeX)
-                : topLeft.x;
+            x < 0
+                ? this.chSizeX - Math.abs(x % this.chSizeX)
+                : x;
         const topFlipped =
-            topLeft.y < 0
-                ? this.chSizeY - Math.abs(topLeft.y % this.chSizeY)
-                : topLeft.y;
+            y < 0
+                ? this.chSizeY - Math.abs(y % this.chSizeY)
+                : y;
 
         const inChunkDistX = leftFlipped % this.chSizeX;
         const inChunkDistY = topFlipped % this.chSizeY;
 
-        if (inChunkDistX + (size.x % this.chSizeX) >= this.chSizeX)
-            chunkBoxW += 1;
-        if (inChunkDistY + (size.y % this.chSizeY) >= this.chSizeY)
-            chunkBoxH += 1;
+        if (inChunkDistX + (width % this.chSizeX) >= this.chSizeX)
+            occupied_chunks_x += 1;
+        if (inChunkDistY + (width % this.chSizeY) >= this.chSizeY)
+            occupied_chunks_y += 1;
 
-        for (let x = 0; x < chunkBoxW; x++) {
-            for (let y = 0; y < chunkBoxH; y++) {
-                this.addIfExists(entity, firstChunkX + x, firstChunkY + y);
-            }
-        }
-    }
-
-    private addIfExists(entity: Entity, x: number, y: number) {
-        if (
-            x >= 0 &&
-            y >= 0 &&
-            x < this.chSizeX &&
-            y < this.chSizeY
-        ) {
-			if(x >= 0 && x < this.chNumX && y >= 0 && y < this.chNumY) {
-				const section = this.columns[x][y];
-				section.push(entity);
-				entity.sections.push(section);
-			}
-        }
+        CollisionMap.return_chunk_num_x = occupied_chunks_x;
+        CollisionMap.return_chunk_num_y = occupied_chunks_y;
     }
 
     //gets chunks but doesn't validate wheter they are inside of the map
@@ -116,15 +161,15 @@ export class CollisionMap {
         return Math.floor(y / this.chSizeY) + this.chNumY / 2;
     }
 
-	//get left of chunk with that pos
-	chunkPosX(chPos: number): number {
-		return chPos * this.chSizeX;
-	}
+    //get left of chunk with that pos
+    get_chunk_pos_x(chPos: number): number {
+        return chPos * this.chSizeX - this.chNumX / 2 * this.chSizeX;
+    }
 
-	//get top of chunk with that pos
-	chunkPosY(chPos: number): number {
-		return chPos * this.chSizeY;
-	}
+    //get top of chunk with that pos
+    get_chunk_pos_y(chPos: number): number {
+        return chPos * this.chSizeY - this.chNumY / 2 * this.chSizeY;
+    }
 
     getChunkOffsetX(x: number): number {
         if (x >= 0) {
@@ -146,13 +191,16 @@ export class CollisionMap {
         //make chunks with things in it colored
         for (let chunkX = 0; chunkX < this.chNumX; chunkX++) {
             for (let chunkY = 0; chunkY < this.chNumY; chunkY++) {
-				const entities = this.columns[chunkX][chunkY]
-				const color = entities.length > 0 ? "white" : "grey";
-				view.fillRect(this.chunkPosX(chunkX) - level.desc.size.x / 2, this.chunkPosY(chunkY) - level.desc.size.x / 2, this.chSizeX, this.chSizeY, color);
-			}
+                const entities = this.section_grid[chunkX][chunkY].entities;
+                const color = entities.length > 0 ? "white" : "grey";
+                view.fillRect(this.get_chunk_pos_x(chunkX), this.get_chunk_pos_y(chunkY), this.chSizeX, this.chSizeY, color);
+		if(this.section_grid[chunkX][chunkY].turrets.size) {
+		    view.fillRect(this.get_chunk_pos_x(chunkX) + this.chSizeX / 4, this.get_chunk_pos_y(chunkY) + this.chSizeY / 4, this.chSizeX / 2, this.chSizeY / 2, "green"); 
+		}
+            }
         }
 
-		//draw lines
+        //draw lines
         ctx.strokeStyle = "blue";
         ctx.beginPath();
 

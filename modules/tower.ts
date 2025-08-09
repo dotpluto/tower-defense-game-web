@@ -184,6 +184,7 @@ export class Tower extends Building {
     ) {
 	this.injectBuildingData(x, y, isCenter, tower_type.building_type, health);
 	this.tower_type = tower_type;
+	Game.level!.cm.add_tower(this);
     }
 
     draw() {

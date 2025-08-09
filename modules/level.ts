@@ -39,7 +39,7 @@ export class Level {
     draw() {
 	view.clear(this.desc.color);
 
-        //this.cm.debugDraw(this);
+        this.cm.debugDraw(this);
 
 	this.currency.update_graphics();
 
