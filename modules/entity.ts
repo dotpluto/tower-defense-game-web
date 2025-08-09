@@ -39,6 +39,10 @@ export abstract class Entity {
     public health: number;
 
     public sections: SectionData[] = []; //collision map sectors of current pass
+    public origin_chunk_x: number = 0;
+    public origin_chunk_y: number = 0;
+    public chunk_num_x: number = 0;
+    public chunk_num_y: number = 0;
 
     constructor(
         x: number,
@@ -123,6 +127,7 @@ export abstract class Entity {
     cleanup() { } //cleanup should only be called by the cull function
     update() { }
     post_update() { }
+    update_towers(_origin_chunk_x: number, _origin_chunk_y: number, _chunk_num_x: number, _chunk_num_y: number) {}
 
     static getDist(a: Entity, b: Entity) {
         let difX = a.centX - b.centX;

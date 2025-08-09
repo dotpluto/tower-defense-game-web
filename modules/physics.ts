@@ -9,11 +9,11 @@ const sectionSizeHint = 100; //the wanted chunk size
 
 export class SectionData {
     public entities: Entity[];
-    public turrets: Set<Tower>;
+    public towers: Set<Tower>;
 
     constructor() {
         this.entities = [];
-        this.turrets = new Set();
+        this.towers = new Set();
     }
 }
 
@@ -83,14 +83,18 @@ export class CollisionMap {
                 if (this.does_chunk_exist(ch_x, ch_y)) {
                     this.section_grid[ch_x][ch_y].entities.push(entity);
                     entity.sections.push(this.section_grid[ch_x][ch_y]);
+                    entity.update_towers(CollisionMap.return_origin_chunk_x,
+                        CollisionMap.return_origin_chunk_y,
+                        CollisionMap.return_chunk_num_x,
+                        CollisionMap.return_chunk_num_y);
                 }
             }
         }
     }
 
     public add_tower(tower: Tower) {
-	let tower_center_x = tower.pos.x + tower.entity_type.size.x / 2;
-	let tower_center_y = tower.pos.y + tower.entity_type.size.y / 2;
+        let tower_center_x = tower.pos.x + tower.entity_type.size.x / 2;
+        let tower_center_y = tower.pos.y + tower.entity_type.size.y / 2;
         this.get_chunks_in_rect(tower_center_x - tower.tower_type.range, tower_center_y - tower.tower_type.range, tower.tower_type.range * 2, tower.tower_type.range * 2);
         for (let x = 0; x < CollisionMap.return_chunk_num_x; x++) {
             for (let y = 0; y < CollisionMap.return_chunk_num_y; y++) {
@@ -104,10 +108,10 @@ export class CollisionMap {
                         this.get_chunk_pos_y(ch_y),
                         this.chSizeX,
                         this.chSizeY
-			
+
                     )
                 ) {
-                    this.section_grid[ch_x][ch_y].turrets.add(tower);
+                    this.section_grid[ch_x][ch_y].towers.add(tower);
                 }
             }
         }
@@ -194,9 +198,9 @@ export class CollisionMap {
                 const entities = this.section_grid[chunkX][chunkY].entities;
                 const color = entities.length > 0 ? "white" : "grey";
                 view.fillRect(this.get_chunk_pos_x(chunkX), this.get_chunk_pos_y(chunkY), this.chSizeX, this.chSizeY, color);
-		if(this.section_grid[chunkX][chunkY].turrets.size) {
-		    view.fillRect(this.get_chunk_pos_x(chunkX) + this.chSizeX / 4, this.get_chunk_pos_y(chunkY) + this.chSizeY / 4, this.chSizeX / 2, this.chSizeY / 2, "green"); 
-		}
+                if (this.section_grid[chunkX][chunkY].towers.size) {
+                    view.fillRect(this.get_chunk_pos_x(chunkX) + this.chSizeX / 4, this.get_chunk_pos_y(chunkY) + this.chSizeY / 4, this.chSizeX / 2, this.chSizeY / 2, "green");
+                }
             }
         }
 

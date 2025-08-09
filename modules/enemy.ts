@@ -60,6 +60,7 @@ export class Enemy extends Entity {
 
     target: Entity | null = null;
     lockedOnMe: EffArray<Tower> = new EffArray<Tower>();
+    public towers_aware_of_me: Set<Tower> = new Set();
 
     constructor(
         x: number,
@@ -146,7 +147,7 @@ export class Enemy extends Entity {
         for (const tower of this.lockedOnMe) {
             tower.notifyTargetDied();
         }
-
+	this.make_towers_forget_me();
         //Delete array in a performant manner to avoid any infinte gc loops
         this.lockedOnMe.clear();
     }
@@ -165,9 +166,42 @@ export class Enemy extends Entity {
             this.vel.x -= diff.x;
             this.vel.y -= diff.y;
         } else if (oEntity instanceof Building) {
-	    if(oEntity.building_type == BuildingType.HQ) {
-		this.markDead = true;
+            if (oEntity.building_type == BuildingType.HQ) {
+                this.markDead = true;
+            }
+        }
+    }
+
+    make_towers_forget_me() {
+	for(let tower of this.towers_aware_of_me) {
+	    tower.forget_enemy(this);
+	}
+	this.towers_aware_of_me.clear();
+    }
+
+    make_towers_remember_me() {
+	for(let section of this.sections) {
+	    for(let tower of section.towers) {
+		tower.remember_enemy(this);
+		this.towers_aware_of_me.add(tower);
 	    }
 	}
+    }
+
+    override update_towers(origin_chunk_x: number,
+        origin_chunk_y: number,
+        chunk_num_x: number,
+        chunk_num_y: number) {
+        if (origin_chunk_x !== this.origin_chunk_x ||
+            origin_chunk_y !== this.origin_chunk_y ||
+            chunk_num_x !== this.chunk_num_x ||
+            chunk_num_y !== this.chunk_num_y) {
+	    this.origin_chunk_x = origin_chunk_x;
+	    this.origin_chunk_y = origin_chunk_y;
+	    this.chunk_num_x = chunk_num_x;
+	    this.chunk_num_y = chunk_num_y;
+	    this.make_towers_forget_me();
+	    this.make_towers_remember_me();
+        }
     }
 }

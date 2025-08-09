@@ -42,7 +42,7 @@ export class TowerType {
 	},
         shootCooldownMax: 7,
         damage: 2,
-        speed: 6,
+        speed: 12,
         range: 250,
 	bullet_type: ProjectileType.BALL,
     });
@@ -163,6 +163,7 @@ export class Tower extends Building {
     public rotation: number = Math.random() * 2 * Math.PI;
     /// Where the tower actually aims at
     public shoot_pos: Vec2 = new Vec2(0, 0);
+    private known_enemies: Set<Enemy> = new Set();
 
     constructor(
         x: number,
@@ -234,6 +235,15 @@ export class Tower extends Building {
         } else {
             this.shootCooldown -= 1;
         }
+
+    }
+
+    forget_enemy(enemy: Enemy) {
+	this.known_enemies.delete(enemy);
+    }
+
+    remember_enemy(enemy: Enemy) {
+	this.known_enemies.add(enemy);
     }
 
     shoot() {
