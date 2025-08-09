@@ -131,7 +131,7 @@ export class TowerType {
 	    button.children[1].innerHTML = this.building_type.info_html;
 	}
 	catch {
-	    console.log(`During creation of the tower ${this.building_type.entity_type.id} tried to load info html but something went wrong.`);
+	    console.warn(`Couldn't find the button for ${this.building_type.entity_type.id} with the id ${this.building_type.button_id}.`);
 	}
     }
 }
