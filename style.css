@@ -31,6 +31,15 @@ button:hover {
     border: 1px solid white;
 }
 
+image {
+    user-drag: none;
+    -webkit-user-drag: none;
+    user-select: none;
+    -moz-user-select: none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
+}
+
 button.big-button {
     height: 48px;
     font-size: 28px;
@@ -75,6 +84,18 @@ canvas {
     flex-direction: column;
     display: flex;
     justify-items: stretch;
+}
+
+.yellow-text {
+    color: yellow;
+}
+
+.green-text {
+    color: green;
+}
+
+span {
+    white-space: nowrap preserve;
 }
 
 .resource-bar {

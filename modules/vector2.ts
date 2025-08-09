@@ -45,6 +45,10 @@ export class Vec2 {
         return new Vec2(v.x * scale, v.y * scale);
     }
 
+    static new_from_angle(angle: number, length: number) {
+	return new Vec2(Math.cos(angle) * length, Math.sin(angle) * length);
+    }
+
     static getRandomUnitVec(): Vec2 {
         let vecAsRad = Math.random() * 2 * Math.PI;
         return new Vec2(Math.cos(vecAsRad), Math.sin(vecAsRad));
@@ -93,6 +97,10 @@ export class Vec2 {
     }
 
     toRadians(): number {
+	return Math.atan2(this.y, this.x);
+    }
+
+    get angle(): number {
 	return Math.atan2(this.y, this.x);
     }
 }

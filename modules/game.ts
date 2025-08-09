@@ -53,7 +53,7 @@ export class Game {
 
     static init() {
         //TODO: add different levels and difficulties
-        Game.loadLevel(new LevelDescriptor("Black", 100, new Vec2(2000, 2000)));
+        Game.loadLevel(new LevelDescriptor("Black", 100, new Vec2(3000, 2000)));
     }
 
     static loadLevel(levelDescriptor: LevelDescriptor) {

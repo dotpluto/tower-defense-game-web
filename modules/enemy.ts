@@ -32,7 +32,7 @@ export class EnemyType {
             hasHealth: true,
             maxHealth: 10,
         },
-        reward: 0.3,
+        reward: 0.2,
         isArmored: false,
     });
     static BIG = new EnemyType({

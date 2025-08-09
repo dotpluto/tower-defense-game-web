@@ -143,7 +143,7 @@ export class GameScreen extends Screen {
 	})
 
 	this.register_click_handler("mgButton", () => {
-	    Game.selBuildingType = TowerType.MG;
+	    Game.selBuildingType = TowerType.BLASTSHOT;
 	})
 	// this.register_click_handler("rocketButton", () => {
 	//     Game.selBuildingType = TowerType.ROCKET;

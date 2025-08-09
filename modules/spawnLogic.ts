@@ -9,7 +9,7 @@ export class SpawnMan {
     public enemies_per_wave = 1;
 
     update() {
-        this.enemies_per_wave += 0.0025;
+        this.enemies_per_wave += 0.0050;
         if (this.spawn_timer <= 0) {
             this.spawn_enemies();
             this.spawn_timer = SpawnMan.SPAWN_TIMER_MAX;

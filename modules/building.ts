@@ -12,6 +12,8 @@ export interface BuildingTypeArgs {
     cost: Resources;
     generation: Resources;
     entity_type: EntityType;
+    info_span_id: string;
+    info_html: string;
 }
 
 export class BuildingType {
@@ -23,6 +25,8 @@ export class BuildingType {
     public cost: Resources;
     public generation: Resources;
     public entity_type: EntityType;
+    public button_id: string;
+    public info_html: string;
 
     static HQ = new BuildingType({
 	entity_type: {
@@ -30,10 +34,12 @@ export class BuildingType {
 	    size: new Vec2(40, 40),
 	    doCollision: true,
 	    hasHealth: true,
-	    maxHealth: 25,
+	    maxHealth: 10,
 	},
         cost: new Resources(0, 0),
-        generation: new Resources(0.025, 0),
+        generation: new Resources(0.025, 0.025),
+	info_span_id: "",
+	info_html: "",
     });
 
     static SOLAR = new BuildingType({
@@ -46,6 +52,8 @@ export class BuildingType {
 	},
         cost: new Resources(10, 15),
         generation: new Resources(0.1, 0),
+	info_span_id: "",
+	info_html: "",
     });
 
     static MINE = new BuildingType({
@@ -58,12 +66,16 @@ export class BuildingType {
 	},
         cost: new Resources(0, 0),
         generation: new Resources(0, 0),
+	info_span_id: "",
+	info_html: "",
     });
 
     constructor(args: BuildingTypeArgs) {
         this.cost = args.cost;
         this.generation = args.generation;
 	this.entity_type = args.entity_type;
+	this.button_id = args.info_span_id;
+	this.info_html = args.info_html;
     }
 }
 
